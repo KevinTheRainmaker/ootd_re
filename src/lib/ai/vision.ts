@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import type { AnalyzeResponse } from "@/types/api";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const PROMPT = `이 패션 사진을 분석하여 다음 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요.
 
@@ -36,22 +36,21 @@ export async function analyzeOotdImage(
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 1024,
       messages: [
         {
           role: "user",
           content: [
-            { type: "image", source: { type: "url", url: imageUrl } },
+            { type: "image_url", image_url: { url: imageUrl } },
             { type: "text", text: PROMPT },
           ],
         },
       ],
     });
 
-    const text =
-      response.content[0].type === "text" ? response.content[0].text : "";
+    const text = response.choices[0]?.message?.content ?? "";
 
     try {
       const parsed = JSON.parse(extractJson(text));
