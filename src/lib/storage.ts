@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 
-const BUCKET = "ootd-images";
+const BUCKET_ORIGINALS = "originals";
+const BUCKET_CARDS = "cards";
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
 
@@ -33,15 +34,17 @@ export async function uploadOriginalImage(
 ): Promise<{ url: string; path: string }> {
   const ext =
     mime === "image/jpeg" ? "jpg" : mime === "image/png" ? "png" : "webp";
-  const path = `originals/${userId}/${Date.now()}.${ext}`;
+  const path = `${userId}/${Date.now()}.${ext}`;
 
   const { error } = await supabaseAdmin.storage
-    .from(BUCKET)
+    .from(BUCKET_ORIGINALS)
     .upload(path, buffer, { contentType: mime, upsert: false });
 
   if (error) throw new Error(error.message);
 
-  const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+  const { data } = supabaseAdmin.storage
+    .from(BUCKET_ORIGINALS)
+    .getPublicUrl(path);
   return { url: data.publicUrl, path };
 }
 
@@ -49,14 +52,14 @@ export async function uploadCardImage(
   buffer: Buffer,
   userId: string,
 ): Promise<{ url: string; path: string }> {
-  const path = `cards/${userId}/${Date.now()}.png`;
+  const path = `${userId}/${Date.now()}.png`;
 
   const { error } = await supabaseAdmin.storage
-    .from(BUCKET)
+    .from(BUCKET_CARDS)
     .upload(path, buffer, { contentType: "image/png", upsert: false });
 
   if (error) throw new Error(error.message);
 
-  const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+  const { data } = supabaseAdmin.storage.from(BUCKET_CARDS).getPublicUrl(path);
   return { url: data.publicUrl, path };
 }

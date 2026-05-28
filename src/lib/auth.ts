@@ -69,30 +69,26 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user }) {
       if (!user.email) return false;
 
-      try {
-        // 이미 가입된 이메일인지 먼저 확인 (멀티 Provider 충돌 방지)
-        const { data: existing } = await supabaseAdmin
-          .from("users")
-          .select("id")
-          .eq("email", user.email)
-          .single();
+      const { data: existing } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("email", user.email)
+        .single();
 
-        if (existing) {
-          user.id = existing.id;
-          await supabaseAdmin
-            .from("users")
-            .update({ name: user.name ?? null, image: user.image ?? null })
-            .eq("id", existing.id);
-        } else {
-          await supabaseAdmin.from("users").insert({
-            id: user.id,
-            email: user.email,
-            name: user.name ?? null,
-            image: user.image ?? null,
-          });
-        }
-      } catch {
-        // Supabase 미설정 시에도 로그인은 허용 (개발 환경)
+      if (existing) {
+        user.id = existing.id;
+        await supabaseAdmin
+          .from("users")
+          .update({ name: user.name ?? null, image: user.image ?? null })
+          .eq("id", existing.id);
+      } else {
+        const { error } = await supabaseAdmin.from("users").insert({
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          image: user.image ?? null,
+        });
+        if (error) return false;
       }
 
       return true;
