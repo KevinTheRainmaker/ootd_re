@@ -35,6 +35,14 @@ export async function analyzeOotdImage(
 ): Promise<AnalyzeResponse> {
   let lastError: Error | null = null;
 
+  // Private 버킷 이미지를 서버에서 fetch → base64로 변환 후 GPT-4o에 전달
+  const imageResponse = await fetch(imageUrl);
+  if (!imageResponse.ok) throw new Error("이미지를 불러올 수 없습니다.");
+  const imageBuffer = await imageResponse.arrayBuffer();
+  const base64 = Buffer.from(imageBuffer).toString("base64");
+  const contentType = imageResponse.headers.get("content-type") ?? "image/jpeg";
+  const dataUrl = `data:${contentType};base64,${base64}`;
+
   for (let attempt = 0; attempt < 2; attempt++) {
     const response = await client.chat.completions.create({
       model: "gpt-4o",
@@ -43,7 +51,7 @@ export async function analyzeOotdImage(
         {
           role: "user",
           content: [
-            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "image_url", image_url: { url: dataUrl } },
             { type: "text", text: PROMPT },
           ],
         },
