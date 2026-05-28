@@ -69,30 +69,30 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user }) {
       if (!user.email) return false;
 
-      // 이미 가입된 이메일인지 먼저 확인 (멀티 Provider 충돌 방지)
-      // Google + Kakao 동일 이메일 시나리오에서 DB id가 덮어씌워지는 것을 막음
-      const { data: existing } = await supabaseAdmin
-        .from("users")
-        .select("id")
-        .eq("email", user.email)
-        .single();
-
-      if (existing) {
-        // 기존 row: JWT에 DB id를 반영하고 name/image만 업데이트 (id 불변)
-        user.id = existing.id;
-        await supabaseAdmin
+      try {
+        // 이미 가입된 이메일인지 먼저 확인 (멀티 Provider 충돌 방지)
+        const { data: existing } = await supabaseAdmin
           .from("users")
-          .update({ name: user.name ?? null, image: user.image ?? null })
-          .eq("id", existing.id);
-      } else {
-        // 신규 사용자: insert
-        const { error } = await supabaseAdmin.from("users").insert({
-          id: user.id,
-          email: user.email,
-          name: user.name ?? null,
-          image: user.image ?? null,
-        });
-        if (error) return false;
+          .select("id")
+          .eq("email", user.email)
+          .single();
+
+        if (existing) {
+          user.id = existing.id;
+          await supabaseAdmin
+            .from("users")
+            .update({ name: user.name ?? null, image: user.image ?? null })
+            .eq("id", existing.id);
+        } else {
+          await supabaseAdmin.from("users").insert({
+            id: user.id,
+            email: user.email,
+            name: user.name ?? null,
+            image: user.image ?? null,
+          });
+        }
+      } catch {
+        // Supabase 미설정 시에도 로그인은 허용 (개발 환경)
       }
 
       return true;
