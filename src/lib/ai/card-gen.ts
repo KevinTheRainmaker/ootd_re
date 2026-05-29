@@ -71,7 +71,7 @@ ${itemAnnotations}
 - 전체: 손글씨 느낌 유지, 원본 사진 훼손 없이`;
 
   const response = await openai.images.edit({
-    model: "gpt-image-1",
+    model: "gpt-image-2-2026-04-21",
     image: imageFile,
     prompt,
     size: "1024x1536",
@@ -79,7 +79,7 @@ ${itemAnnotations}
   });
 
   const b64 = response.data?.[0]?.b64_json;
-  if (!b64) throw new Error("gpt-image-1 응답에 이미지 없음");
+  if (!b64) throw new Error("gpt-image-2 응답에 이미지 없음");
 
   const cardBuffer = Buffer.from(b64, "base64");
   const { url } = await uploadCardImage(cardBuffer, userId);
