@@ -32,9 +32,16 @@ async function planA(
     .slice(0, 6)
     .map((item) => {
       const label = CATEGORY_LABEL[item.category] ?? item.category;
-      const desc = item.style_description ?? "";
       const color = item.color ? ` (${item.color})` : "";
-      return `• ${label}${color}: ${desc}`;
+      const brandPart = [item.brand, item.product_name]
+        .filter(Boolean)
+        .join(" ");
+      const desc = item.style_description ?? "";
+      // 브랜드/제품명 입력 시 우선 표기, 없으면 AI 설명만
+      const detail = brandPart
+        ? `${brandPart}${desc ? ` — ${desc}` : ""}`
+        : desc;
+      return `• ${label}${color}: ${detail}`;
     })
     .join("\n");
 
