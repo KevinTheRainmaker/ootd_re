@@ -64,9 +64,13 @@ export async function POST(
       { status: 201 },
     );
   } catch (err: unknown) {
-    const e = err as { message?: string };
+    const e = err as { message?: string; code?: string; details?: string };
+    console.error("[save] 저장 실패:", err);
     return NextResponse.json(
-      { error: e.message ?? "저장 실패" },
+      {
+        error: e.message ?? "저장 실패",
+        details: e.details ?? e.code ?? null,
+      },
       { status: 500 },
     );
   }

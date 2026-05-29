@@ -82,13 +82,18 @@ export const authOptions: NextAuthOptions = {
           .update({ name: user.name ?? null, image: user.image ?? null })
           .eq("id", existing.id);
       } else {
-        const { error } = await supabaseAdmin.from("users").insert({
-          id: user.id,
-          email: user.email,
-          name: user.name ?? null,
-          image: user.image ?? null,
-        });
-        if (error) return false;
+        // id를 포함하지 않음 → DB의 gen_random_uuid() 기본값으로 UUID 자동 생성
+        const { data: inserted, error } = await supabaseAdmin
+          .from("users")
+          .insert({
+            email: user.email,
+            name: user.name ?? null,
+            image: user.image ?? null,
+          })
+          .select("id")
+          .single();
+        if (error || !inserted) return false;
+        user.id = inserted.id; // DB가 생성한 UUID를 세션에 저장
       }
 
       return true;
