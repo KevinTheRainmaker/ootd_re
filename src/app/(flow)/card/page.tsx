@@ -22,14 +22,7 @@ interface OotdSessionData {
 function CardPageInner() {
   const router = useRouter();
 
-  const [ootdData] = useState<OotdSessionData | null>(() => {
-    try {
-      const raw = sessionStorage.getItem("ootdData");
-      return raw ? (JSON.parse(raw) as OotdSessionData) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [ootdData, setOotdData] = useState<OotdSessionData | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -38,8 +31,15 @@ function CardPageInner() {
   const { toasts, addToast, dismiss } = useToast();
 
   useEffect(() => {
-    if (!ootdData) router.replace("/upload");
-  }, [ootdData, router]);
+    try {
+      const raw = sessionStorage.getItem("ootdData");
+      const data = raw ? (JSON.parse(raw) as OotdSessionData) : null;
+      setOotdData(data);
+      if (!data) router.replace("/upload");
+    } catch {
+      router.replace("/upload");
+    }
+  }, [router]);
 
   const handleDownload = useCallback(async () => {
     if (!ootdData?.card_image_url) return;
