@@ -27,6 +27,22 @@ export function validateImageFile(
   return { ok: true };
 }
 
+/** Supabase private 버킷 URL → 60초 유효 signed URL 반환 */
+export async function getSignedUrl(imageUrl: string): Promise<string> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  if (!imageUrl.startsWith(supabaseUrl)) return imageUrl;
+
+  const match = imageUrl.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+  if (!match) return imageUrl;
+
+  const [, bucket, filePath] = match;
+  const { data, error } = await supabaseAdmin.storage
+    .from(bucket)
+    .createSignedUrl(filePath, 60);
+  if (error || !data?.signedUrl) throw new Error("signed URL 생성 실패");
+  return data.signedUrl;
+}
+
 export async function uploadOriginalImage(
   buffer: Buffer,
   mime: AllowedMime,

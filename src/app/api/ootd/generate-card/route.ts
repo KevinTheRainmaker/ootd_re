@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { checkCardLimit, incrementCardCount } from "@/lib/usage";
+import { getSignedUrl } from "@/lib/storage";
 import { generateCard } from "@/lib/ai/card-gen";
 import type {
   GenerateCardRequest,
@@ -52,7 +53,11 @@ export async function POST(
   }
 
   try {
-    const result = await generateCard(body.ootd_data, userId);
+    const signedImageUrl = await getSignedUrl(
+      body.ootd_data.original_image_url,
+    );
+    const ootdData = { ...body.ootd_data, original_image_url: signedImageUrl };
+    const result = await generateCard(ootdData, userId);
     await incrementCardCount(userId);
     return NextResponse.json(result, { status: 200 });
   } catch (err: unknown) {
