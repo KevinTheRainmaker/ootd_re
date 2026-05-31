@@ -1,0 +1,34 @@
+# OOTD-re 날씨/무드 기능 추가 — TTH 사일로
+
+## Project Context
+- 기존 ootd-re (Next.js 14, App Router)에 CLOSET 기능 추가
+- 작업 디렉토리: C:\Users\HCIS\Desktop\git\ootd-re
+
+## 기존 코드 파악
+- 홈: src/app/page.tsx (단순 CTA 버튼)
+- 캘린더: src/app/(app)/calendar/page.tsx (리스트 그리드)
+- 카드 저장: src/app/(flow)/card/page.tsx (is_public 토글만)
+- DB: supabase/migrations/ (001-004 존재)
+- 타입: src/types/index.ts (OotdRecord, OotdItem 등)
+- DB헬퍼: src/lib/db/ootd.ts
+
+## 추가할 기능
+1. DB: ootd_records에 mood(text), weather_snapshot(jsonb) 컬럼
+2. /api/weather: OpenWeatherMap 날씨 조회 (위도/경도 기반)
+3. 홈 날씨 위젯: 상단 날씨 표시 + 동적 배경색
+4. /api/ootd/recommend: 날씨 기반 아이템 조합 추천
+5. 카드 저장 시 무드 선택 (5가지 색상)
+6. 캘린더: 날짜별 무드 색 점 표시 + 그리드 캘린더 뷰
+7. /shop: Coming Soon 페이지
+
+## Gotchas
+- Next.js 서버 컴포넌트에서 클라이언트 위치 API 불가 → /api/weather는 클라이언트에서 호출
+- OotdRecord 타입에 mood, weatherSnapshot 추가 필요
+- 캘린더 API 응답에 mood 포함해야 함
+- 환경변수: OPENWEATHERMAP_API_KEY 추가 필요
+
+## File Boundaries
+- 젠슨: src/app/api/weather/, src/app/api/ootd/recommend/, supabase/migrations/, src/lib/db/
+- 팀쿡: src/app/page.tsx, src/app/shop/, src/components/home/
+- 저커버그: src/app/(flow)/card/page.tsx, src/app/(app)/calendar/page.tsx, src/components/calendar/
+- 피차이: src/types/index.ts, src/types/api.ts (타입 업데이트)

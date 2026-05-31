@@ -1,4 +1,4 @@
-import { OotdItem } from "./index";
+import { OotdItem, Mood, WeatherSnapshot } from "./index";
 
 export interface UploadResponse {
   url: string;
@@ -38,6 +38,8 @@ export interface SaveOotdRequest {
   is_public: boolean;
   memo?: string;
   date?: string;
+  mood?: Mood;
+  weatherSnapshot?: WeatherSnapshot | null;
 }
 
 export interface SaveOotdResponse {

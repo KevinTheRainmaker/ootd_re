@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { getAuthSession } from "@/lib/auth";
+import WeatherSection from "@/components/home/WeatherSection";
 
 export default async function Home() {
   const session = await getAuthSession();
@@ -37,6 +38,12 @@ export default async function Home() {
           </p>
         )}
       </section>
+
+      {isLoggedIn && (
+        <section className="w-full max-w-md px-6 pb-4">
+          <WeatherSection />
+        </section>
+      )}
 
       {isLoggedIn && (
         <section className="w-full max-w-md px-6 pb-16">

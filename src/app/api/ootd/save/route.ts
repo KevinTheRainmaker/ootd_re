@@ -43,6 +43,8 @@ export async function POST(
       share_id: shareId,
       memo: body.memo ?? null,
       plan_used: null,
+      mood: body.mood ?? "happy",
+      weather_snapshot: body.weatherSnapshot ?? null,
     });
 
     if (body.items.length > 0) {

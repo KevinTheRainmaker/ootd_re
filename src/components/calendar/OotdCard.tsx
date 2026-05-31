@@ -1,10 +1,23 @@
 import Link from "next/link";
-import type { OotdRecord } from "@/types";
+import type { OotdRecord, Mood } from "@/types";
+
+const MOOD_COLORS: Record<Mood, string> = {
+  passion: "bg-red-400",
+  happy: "bg-yellow-400",
+  calm: "bg-blue-400",
+  cozy: "bg-green-400",
+  creative: "bg-purple-400",
+};
 
 interface OotdCardProps {
   record: Pick<
     OotdRecord,
-    "id" | "date" | "card_image_url" | "original_image_url" | "hashtags"
+    | "id"
+    | "date"
+    | "card_image_url"
+    | "original_image_url"
+    | "hashtags"
+    | "mood"
   >;
 }
 
@@ -31,8 +44,15 @@ export default function OotdCard({ record }: OotdCardProps) {
             <span className="text-zinc-400 text-xs">사진 없음</span>
           </div>
         )}
-        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs font-medium rounded-full px-2 py-0.5">
-          {day}일
+        <div className="absolute top-2 left-2 flex items-center gap-1">
+          <div className="bg-black/50 text-white text-xs font-medium rounded-full px-2 py-0.5">
+            {day}일
+          </div>
+          {record.mood && (
+            <div
+              className={`w-2 h-2 rounded-full ${MOOD_COLORS[record.mood]}`}
+            />
+          )}
         </div>
       </div>
     </Link>

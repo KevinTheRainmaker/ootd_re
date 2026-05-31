@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import type { AnalyzeResponse } from "@/types/api";
+import type { Mood } from "@/types";
 
 interface OotdSessionData {
   items: AnalyzeResponse["items"];
@@ -19,11 +20,20 @@ interface OotdSessionData {
   card_image_url: string;
 }
 
+const MOODS = [
+  { value: "passion", color: "bg-red-400", label: "열정" },
+  { value: "happy", color: "bg-yellow-400", label: "행복" },
+  { value: "calm", color: "bg-blue-400", label: "차분" },
+  { value: "cozy", color: "bg-green-400", label: "편안" },
+  { value: "creative", color: "bg-purple-400", label: "창의" },
+] as const;
+
 function CardPageInner() {
   const router = useRouter();
 
   const [ootdData, setOotdData] = useState<OotdSessionData | null>(null);
   const [isPublic, setIsPublic] = useState(false);
+  const [mood, setMood] = useState<Mood>("happy");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [shareId, setShareId] = useState<string | null>(null);
@@ -82,6 +92,7 @@ function CardPageInner() {
           style_summary: ootdData.summary,
           hashtags: ootdData.hashtags,
           is_public: isPublic,
+          mood,
           date: new Date().toISOString().slice(0, 10),
         }),
       });
@@ -96,7 +107,7 @@ function CardPageInner() {
     } finally {
       setSaving(false);
     }
-  }, [saving, saved, ootdData, isPublic, addToast]);
+  }, [saving, saved, ootdData, isPublic, mood, addToast]);
 
   const handleRegen = useCallback(() => {
     setRegenModalOpen(false);
@@ -140,6 +151,29 @@ function CardPageInner() {
               ].join(" ")}
             />
           </button>
+        </div>
+      )}
+
+      {/* 무드 선택 (저장 전에만 표시) */}
+      {!saved && (
+        <div className="w-full max-w-sm">
+          <p className="text-xs text-zinc-500 mb-2">오늘의 무드</p>
+          <div className="flex gap-2">
+            {MOODS.map((m) => (
+              <button
+                key={m.value}
+                onClick={() => setMood(m.value)}
+                className={[
+                  "w-8 h-8 rounded-full transition-all",
+                  m.color,
+                  mood === m.value
+                    ? "ring-2 ring-offset-2 ring-zinc-400 scale-110"
+                    : "opacity-60",
+                ].join(" ")}
+                title={m.label}
+              />
+            ))}
+          </div>
         </div>
       )}
 

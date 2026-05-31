@@ -34,6 +34,15 @@ export interface OotdItem {
   created_at: string;
 }
 
+export type Mood = "passion" | "happy" | "calm" | "cozy" | "creative";
+
+export interface WeatherSnapshot {
+  temp: number;
+  humidity: number;
+  condition: string;
+  description: string;
+}
+
 export interface OotdRecord {
   id: string;
   user_id: string;
@@ -46,6 +55,8 @@ export interface OotdRecord {
   share_id: string | null;
   memo: string | null;
   plan_used: "A" | "B" | null;
+  mood: Mood | null;
+  weather_snapshot: WeatherSnapshot | null;
   created_at: string;
   updated_at: string;
   items?: OotdItem[];
