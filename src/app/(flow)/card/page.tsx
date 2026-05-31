@@ -54,7 +54,7 @@ const CARD_TYPES: {
     label: "배경 제거",
     icon: "hide_image",
     desc: "배경 제거 후 새 배경",
-    pro: true,
+    pro: false,
   },
   {
     type: "style",

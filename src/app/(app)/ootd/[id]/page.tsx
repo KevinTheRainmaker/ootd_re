@@ -18,6 +18,7 @@ function OotdDetailInner() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("card");
   const [toggling, setToggling] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
@@ -85,6 +86,50 @@ function OotdDetailInner() {
       addToast("링크 복사에 실패했습니다.", "error");
     }
   }, [record, addToast]);
+
+  const handleShare = useCallback(async () => {
+    if (!record || sharing) return;
+    setSharing(true);
+    try {
+      let sid = record.share_id;
+
+      // 비공개이거나 share_id 없으면 공개 전환
+      if (!sid || !record.is_public) {
+        const res = await fetch(`/api/ootd/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_public: true }),
+        });
+        if (res.ok) {
+          const updated: OotdRecord = await res.json();
+          setRecord(updated);
+          sid = updated.share_id;
+        }
+      }
+
+      if (!sid) {
+        addToast("공유 링크를 생성할 수 없습니다.", "error");
+        return;
+      }
+
+      const shareUrl = `${location.origin}/share/${sid}`;
+      if (navigator.share) {
+        await navigator.share({
+          title: "오늘의 OOTD",
+          text: record.style_summary ?? "나의 착장을 확인해보세요!",
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        addToast("공유 링크가 복사됐습니다.", "success");
+      }
+    } catch (e) {
+      if (e instanceof Error && e.name !== "AbortError")
+        addToast("공유에 실패했습니다.", "error");
+    } finally {
+      setSharing(false);
+    }
+  }, [record, sharing, id, addToast]);
 
   const handleDelete = useCallback(async () => {
     if (deleting) return;
@@ -275,8 +320,20 @@ function OotdDetailInner() {
         )}
       </section>
 
-      {/* 삭제 버튼 */}
-      <section className="w-full max-w-sm pb-6">
+      {/* 공유 + 삭제 버튼 */}
+      <section className="w-full max-w-sm flex flex-col gap-2 pb-6">
+        <Button
+          size="md"
+          className="w-full rounded-full"
+          onClick={handleShare}
+          loading={sharing}
+          disabled={sharing}
+        >
+          <span className="material-symbols-outlined text-[16px]">
+            ios_share
+          </span>
+          공유하기
+        </Button>
         <Button
           variant="ghost"
           size="md"

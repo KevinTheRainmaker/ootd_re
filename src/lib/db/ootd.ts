@@ -92,6 +92,21 @@ export async function deleteOotdRecord(
   if (error) throw new Error(error.message);
 }
 
+export async function getAllOotdsByUser(
+  userId: string,
+  limit = 60,
+): Promise<OotdRecord[]> {
+  const { data, error } = await supabaseAdmin
+    .from("ootd_records")
+    .select("*")
+    .eq("user_id", userId)
+    .order("date", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export async function createOotdItems(
   items: Omit<OotdItem, "id" | "created_at">[],
 ): Promise<OotdItem[]> {

@@ -11,7 +11,7 @@ import type {
   CardType,
 } from "@/types/api";
 
-const PRO_ONLY_TYPES: CardType[] = ["ai", "remove-bg", "style"];
+const PRO_ONLY_TYPES: CardType[] = ["ai", "style"];
 
 export async function POST(
   req: NextRequest,
