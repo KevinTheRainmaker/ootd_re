@@ -1,5 +1,15 @@
 {
   "permissions": {
-    "allow": ["Bash(dir C:\\\\Users\\\\HCIS\\\\Desktop\\\\git\\\\ootd-re *)"]
+    "allow": [
+      "Bash(dir C:\\\\Users\\\\HCIS\\\\Desktop\\\\git\\\\ootd-re *)",
+      "Bash(Get-Content package.json)",
+      "Bash(Select-String \"imgly\")",
+      "Read(//mnt/c/Users/HCIS/Desktop/git/**)",
+      "Bash(ls node_modules/@imgly)",
+      "Bash(npm install *)",
+      "Read(//usr/local/bin/**)",
+      "Read(//usr/bin/**)",
+      "Bash(powershell.exe -Command \"cd 'C:\\\\\\\\Users\\\\\\\\HCIS\\\\\\\\Desktop\\\\\\\\git\\\\\\\\ootd-re'; npm install onnxruntime-web@1.21.0 2>&1\")"
+    ]
   }
 }
