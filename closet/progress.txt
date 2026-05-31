@@ -1,0 +1,224 @@
+# CLOSET — TTH 사일로 공유 메모리
+
+## Project Context
+- CLOSET: Flutter 패션 앱 (iOS + Android)
+- 핵심 플로우: 소셜 로그인 → 날씨+AI코디 홈 → OOTD 업로드+AI분석 → 카드 생성
+- Stack: Flutter (Dart) + Riverpod 3.0 + Supabase + Gemini 2.0 Flash Vision + OpenWeatherMap
+- 위치: C:\Users\HCIS\Desktop\git\ootd-re\closet\
+
+## Key Decisions
+- AI 패션 인식: Gemini 2.0 Flash Vision API (정확도 1위, 저렴)
+- 날씨 API: OpenWeatherMap (무료 티어, Flutter 패키지 풍부)
+- 상태관리: Riverpod 3.0 (1인 개발 표준, GetX 금지)
+- 백엔드: Supabase (Storage + PostgreSQL, Flutter SDK 공식 지원)
+- 배경제거: remove.bg API (월 50장 무료)
+- Freemium: 무료(기본 카드) / Pro(AI 배경제거, 스타일 변경)
+
+## Architecture
+- lib/
+  ├── main.dart
+  ├── app/                  # Router, Theme, 앱 설정
+  ├── features/
+  │   ├── auth/            # 소셜 로그인
+  │   ├── home/            # 날씨 + 캘린더 홈
+  │   ├── ootd/            # OOTD 업로드 + AI 분석
+  │   ├── card/            # 카드 생성
+  │   ├── profile/         # 내 프로필
+  │   └── shop/            # 숍 (Coming Soon)
+  ├── shared/              # 공통 위젯, 유틸
+  └── services/            # API 클라이언트 (Supabase, Gemini, Weather)
+
+## File Boundaries
+- 피차이: lib/app/, lib/shared/models/, pubspec.yaml, docs/
+- 팀쿡: lib/features/home/, lib/features/shop/, lib/features/profile/, lib/shared/widgets/
+- 저커버그: lib/features/ootd/, lib/features/card/
+- 젠슨: lib/services/, supabase/migrations/
+
+## Hard Gates (Flutter)
+- flutter analyze (no errors)
+- flutter build apk --debug (빌드 성공)
+
+## Gotchas
+- GetX 사용 금지 (2026.04 GitHub 삭제 사태)
+- Riverpod 3.0: @riverpod 어노테이션 + code_gen 사용
+- Supabase Flutter SDK v2.x — GoTrue 분리됨
+- OpenWeatherMap API: NEXT_PUBLIC 없음 (Flutter는 flutter_dotenv 사용)
+- Gemini Vision: google_generative_ai 패키지 사용
+
+## Completed Work
+
+### S0 (Task #1) — 피차이 완료 (2026-05-31)
+- flutter create . --org com.closet --platforms android,ios 성공
+- pubspec.yaml: supabase_flutter, riverpod, go_router, gemini, geolocator 등 전체 의존성 추가
+- flutter pub get 성공 (144 패키지)
+- lib/ 구조 생성: app/, features/{auth,home,ootd,card,profile,shop}/, shared/{models,widgets,utils}/, services/
+- lib/main.dart: ProviderScope + Supabase.initialize + dotenv 구조
+- lib/app/router.dart, lib/app/theme.dart 생성
+- .env.example, .env(플레이스홀더) 생성
+- docs/ARCHITECTURE.md, docs/design-docs/index.md 생성
+- test/widget_test.dart: MyApp 참조 제거 (플레이스홀더 테스트)
+- flutter analyze: No issues found
+
+## Gotchas (추가)
+- widget_test.dart는 main.dart 구조 변경 시 함께 업데이트 필요 (MyApp → ClosetApp)
+- .env 파일은 pubspec.yaml assets에 선언해야 dotenv.load() 작동
+- flutter_lints 버전이 pubspec에서 ^3.0.1이지만 실제로 3.0.2로 다운그레이드됨 (정상)
+
+### S2 (Task #3) — 피차이 완료 (2026-05-31)
+- lib/shared/models/ootd_record.dart: OotdRecord 모델 (items 포함)
+- lib/shared/models/ootd_item.dart: OotdItem 모델 (카테고리, 브랜드, 색상 등)
+- lib/shared/models/weather_data.dart: WeatherData 모델 (OWM API 응답 파싱 포함)
+- lib/shared/models/user_profile.dart: UserProfile 모델 (plan free/pro)
+- supabase/migrations/001_initial.sql: 4개 테이블 + 인덱스
+- docs/design-docs/ADR-001-tech-stack.md: 기술 스택 결정 문서
+- flutter analyze: No issues found
+
+### S1.6 (google_fonts + 공통 유틸) — 베조스 완료 (2026-05-31)
+- pubspec.yaml: google_fonts ^6.2.1 이미 추가됨 (팀쿡 S4에서 선작업)
+- lib/app/theme.dart: GoogleFonts.montserratTextTheme() 이미 적용됨
+- lib/shared/utils/mood_colors.dart: Mood enum + MoodColor extension (color, label, fromString)
+- lib/shared/utils/weather_utils.dart: weatherBackground(), weatherLabel() top-level 함수
+- flutter analyze: No issues found
+
+### S1.5 (RLS + README) — 베조스 완료 (2026-05-31)
+- supabase/migrations/002_rls.sql: 4개 테이블 RLS 활성화 + 7개 정책 (users_self, ootd_owner, ootd_public, items_owner, items_public, usage_owner)
+- README.md: 환경 변수 설정, Supabase 마이그레이션 절차, flutter run 명령, 디렉토리 구조 문서화
+- usage_logs 테이블 RLS 추가 (001에는 있으나 팀장 스펙에서 누락 → 추가 적용)
+
+### S1 (Task #2) — 베조스 완료 (2026-05-31)
+- tasks/deletion-analysis.md 생성
+- 제외 확정 10개: 커뮤니티 피드, 팔로우/팔로워, 좋아요/댓글, 옷장 분류 고도화, 다중 AI 앙상블, 푸시 알림, SNS 직접 공유, 해시태그 검색, 온보딩 슬라이드, 다크모드 토글
+- 단순화 10개: Pro 배경제거(remove.bg 호출), AI 코디추천(Gemini 텍스트), 카드 편집기(고정 템플릿), 인증(Google 단일), 프로필(최소), 날씨 UI(정적), 캘린더(기본 월뷰), 숍(Coming Soon) 등
+- 유지 Must 10개: 날씨 API, Gemini Vision, Google 로그인, OOTD 업로드 플로우, 카드 생성, 홈 캘린더, Supabase, Riverpod, Freemium, 네비
+- 위험 신호 5개 + 권고사항 5개 도출
+- 핵심 결정: Android 우선 배포, Pro 인앱결제 연기, 커뮤니티 Phase 2 이동
+
+### S4 (Task #5) — 팀쿡 완료 (2026-05-31)
+- pubspec.yaml: google_fonts ^6.2.1 추가, flutter pub get 성공
+- lib/app/theme.dart: Vogue 테마 (Montserrat, #000/#FFF/#FDF8F8, Material3)
+- lib/app/main_scaffold.dart: IndexedStack + 커스텀 NavBar (홈/숍/프로필) + 중앙 FAB (+버튼 → /ootd/upload)
+- lib/app/router.dart: routerProvider (젠슨 auth redirect 보존) + /home, /shop, /profile, /ootd/upload, /card 라우트
+- lib/features/home/home_screen.dart: 플레이스홀더 (S6 날씨위젯 준비)
+- lib/features/profile/profile_screen.dart: 플레이스홀더 (S13 준비)
+- lib/features/ootd/ootd_upload_screen.dart: 플레이스홀더 (S8 준비)
+- lib/features/card/card_screen.dart: 플레이스홀더 (S10 준비)
+- flutter analyze (내 영역): No issues found
+
+### S14 (Task #15) — 팀쿡 완료 (2026-05-31)
+- lib/features/shop/shop_screen.dart: Vogue 스타일 Coming Soon 화면
+  - CLOSET 대형 타이포 + SHOP 부제 (Montserrat Bold/Regular)
+  - "현재 준비 중입니다" + "패션 쇼핑 경험을 곧 가져올게요"
+  - 이메일 알림 신청 TextField + OK 버튼 (제출 후 감사 메시지로 전환)
+  - 미니멀 라인 구분자
+- flutter analyze (내 영역): No issues found
+
+### S3 (Task #4) — 젠슨 완료 (2026-05-31)
+- lib/services/auth_service.dart: GoogleSignIn + Supabase signInWithIdToken (OAuthProvider.google)
+- lib/features/auth/auth_provider.dart: authServiceProvider, authStateProvider (Riverpod StreamProvider)
+- lib/features/auth/login_screen.dart: Vogue 스타일 검정 배경, Montserrat Bold CLOSET 로고, 흰 원형 Google 버튼
+- lib/app/router.dart (flutter import 추가): _AuthChangeNotifier(ChangeNotifier) → refreshListenable 수정
+- 플레이스홀더 생성 (팀쿡 main_scaffold 의존): shop_screen.dart, ootd_upload_screen.dart, card_screen.dart
+- flutter analyze: No issues found
+
+### S5 (Task #6) — 젠슨 완료 (2026-05-31)
+- lib/services/weather_service.dart: WeatherService (위치 권한 처리 + OWM API 호출), weatherBackground() 함수
+- lib/features/home/weather_provider.dart: weatherServiceProvider, weatherProvider (FutureProvider)
+- geolocator 12.x API: getCurrentPosition(desiredAccuracy, timeLimit) — locationSettings는 getPositionStream용
+- flutter analyze: No issues found
+
+### S7 (Task #8) — 저커버그 완료 (2026-05-31)
+- lib/features/home/widgets/ootd_calendar.dart: OotdCalendar 위젯
+  - table_calendar ^3.1.2 사용, 월별 이동 지원
+  - 각 날짜 OOTD 존재 시 MoodColor 기반 컬러 도트 마커 표시
+  - 날짜 클릭 → onDaySelected 콜백
+  - Vogue 스타일: 흰 배경, Montserrat, 미니멀 (검정 원형 선택 표시, 테두리 오늘 표시)
+- lib/features/home/home_screen.dart 업데이트:
+  - StatefulWidget 전환 (선택된 날짜 상태 관리)
+  - 상단 30% flex(3): 날씨 위젯 placeholder (S6 팀쿡 담당)
+  - 하단 60% flex(6): OotdCalendar + 선택일 정보 표시
+- flutter analyze: No issues found
+
+### S8 (Task #9) — 젠슨 완료 (2026-05-31)
+- lib/services/gemini_service.dart: GeminiService (gemini-2.0-flash, analyzeOutfitImage, JSON 파싱 → OotdItem 리스트)
+- lib/features/ootd/ootd_upload_provider.dart: UploadState (idle/analyzing/done/error), UploadNotifier, uploadProvider
+- lib/features/ootd/ootd_upload_screen.dart: 사진 선택(image_picker) → AI 분석 → 아이템 편집 이동, 검정 Vogue 스타일
+- AI 분석 임시 OotdItem: id='temp_$idx', ootdId='' (저장 시 실제 ID로 교체)
+- flutter analyze: No issues found
+
+### S11 (Task #12) — 젠슨 완료 (2026-05-31)
+- lib/services/ootd_service.dart: OotdService (createOotd — ootd_records + ootd_items batch insert, getOotdsByMonth — Map<DateTime, List<OotdRecord>> 반환)
+- lib/features/home/home_provider.dart: ootdServiceProvider, ootdsByMonthProvider (FutureProvider.family with record type ({year, month}))
+- flutter analyze: No issues found
+
+### S9 (Task #10) — 저커버그 완료 (2026-05-31)
+- lib/features/ootd/item_edit_screen.dart: 아이템 편집 UI
+  - AI 분석 결과 OotdItem 리스트 → _EditableItem 로컬 모델로 편집
+  - 카테고리 드롭다운 (top/bottom/outer/shoes/bag/accessory, 한국어 레이블)
+  - 색상/브랜드/제품명 TextField
+  - Dismissible 스와이프 삭제 (endToStart, 빨간 배경)
+  - 하단 아이템 추가 버튼 (OutlinedButton.icon)
+  - 무드 선택: 5개 원형 컬러 버튼 (Mood enum, 선택 시 외곽선 + shadow)
+  - "카드 생성하기" CTA → /card/generate 라우트 push
+- lib/app/router.dart: /ootd/edit, /card/generate 라우트 추가
+- flutter analyze: No issues found
+
+### S10 (Task #11) — 저커버그 완료 (2026-05-31)
+- lib/features/card/card_generation_screen.dart: 카드 생성 화면
+  - Stack: 원본 사진(AspectRatio 3:4) + 무드 배지(상단 좌) + 아이템 태그 오버레이(하단 그라디언트)
+  - 공개/비공개 Switch.adaptive 토글
+  - "캘린더에 저장" 버튼 → SnackBar + /home 이동
+  - "공유 링크 생성" 버튼 → SnackBar
+  - Pro 기능 버튼 2개 (배경 제거, 스타일 변경): 잠금 아이콘 + "Pro 전용" 배지, 탭 시 "Pro 구독이 필요합니다" SnackBar
+- flutter analyze: No issues found
+
+### S6 (Task #7) — 젠슨 완료 (2026-05-31)
+- lib/features/home/widgets/weather_widget.dart: 그라디언트 배경 + Montserrat Bold 64sp 온도 + 습도 칩 + AI 추천 placeholder
+  - sunny→[#87CEEB,#FFD580], cloudy→[#B0BEC5,#90A4AE], rainy→[#546E7A,#37474F], snowy→[#ECEFF1,#CFD8DC]
+  - 로딩: CircularProgressIndicator, 에러: cloud_off 아이콘 + 안내 텍스트
+  - 팀쿡 기본 뼈대 위에 그라디언트/대형 온도/AI placeholder 추가
+- home_screen.dart: WeatherWidget import + 통합 (팀쿡 완료분에 추가)
+- flutter analyze: No issues found
+
+### S6 (Task #7) — 팀쿡 완료 (2026-05-31) [weather_widget 뼈대]
+- lib/features/home/widgets/weather_widget.dart 최초 생성 (WeatherWidget ConsumerWidget)
+  - weatherProvider 연동, condition별 배경색/아이콘/레이블, skeleton/error 상태 처리
+- lib/features/home/home_screen.dart: WeatherWidget import + 통합
+
+### S12 (Task #13) — 팀쿡 완료 (2026-05-31)
+- lib/features/home/ai_recommend_provider.dart: aiRecommendProvider (FutureProvider)
+  - Gemini 2.0 Flash 텍스트 API → 날씨 기반 코디 추천 1줄 (fallback 포함)
+- lib/features/home/widgets/weather_widget.dart: _AiRecommendCard → ConsumerWidget 교체, aiRecommendProvider 연동
+
+### S13 (Task #14) — 팀쿡 완료 (2026-05-31)
+- lib/features/profile/profile_screen.dart: Vogue 스타일 프로필 화면
+  - Supabase currentUser 아바타/이름/이메일, 메뉴(나의OOTD/Pro/설정), 로그아웃
+  - _profileProvider: authStateProvider에서 User? 추출
+
+### S15 (Task #16) — 젠슨 완료 (2026-05-31)
+- android/app/build.gradle.kts: ndkVersion = "27.0.12077973" (flutter.ndkVersion → 명시적 버전, 플러그인 NDK 불일치 해소)
+- dart analyze lib/: No issues found
+- flutter analyze --no-pub: No issues found
+- flutter build apk --debug: build\app\outputs\flutter-apk\app-debug.apk 생성 성공
+- 전체 dart 파일 29개 오류 없음
+
+### P0 버그 수정 (피차이 — 2026-05-31)
+- lib/app/router.dart: 전역 `router` 인스턴스(dead code, auth refreshListenable 없음) 제거
+- lib/app/router.dart: redirect에서 `currentUser` → `currentSession` 변경 + `authState.isLoading` 체크 추가 (세션 복원 전 redirect 경쟁 조건 해소)
+- lib/app/router.dart: /card/generate 라우트 — `originalImageUrl` fallback을 `''` → `imagePath`로 수정 (빈 URL 방지)
+- flutter analyze: No issues found
+
+### P1 (card_generation_screen 실제 저장/공유 연동) — 저커버그 완료 (2026-05-31)
+- _saveToCalendar(): ootdServiceProvider.createOotd() 실제 호출, _isSaving 로딩 상태, 에러 스낵바
+- _shareLink(): Clipboard.setData()로 클립보드 복사 (저장 후 ootdId 사용, 미저장 시 'draft')
+- _BottomActions: Future<void> Function() 콜백, isSaving 로딩 UI (CircularProgressIndicator)
+- ItemEditScreen: originalImageUrl 파라미터 추가, /card/generate push extra에 포함
+- router.dart: /ootd/edit 빌더에 originalImageUrl 전달 (없으면 imagePath fallback)
+- flutter analyze: No issues found
+
+## Failure Lessons
+- login_screen.dart처럼 다른 팀원 파일에 lint 경고가 생겨도 flutter analyze가 실패하면 직접 수정 필요 (파일 경계 엄격 적용은 기능 코드에 한함, lint는 전체 책임)
+- router.dart를 덮어쓸 때 젠슨이 이미 auth redirect + refreshListenable 구현했으므로 보존 필수 (파일 경계 확인 우선)
+- flutter analyze는 --no-pub 플래그 사용 필수 (pub resolution이 SDK 불호환 버전을 당겨올 수 있음)
+- flutter build 전 flutter clean 시 build 디렉토리가 잠겨있으면 clean이 실패할 수 있음 — 재시도하면 해소됨
+- NDK 버전 충돌: flutter.ndkVersion 대신 "27.0.12077973" 명시로 해결 (플러그인들이 27.x 요구)
+- shared_preferences_android dependency_overrides 주의: 2.4.20은 Dart 3.9 요구 → 2.4.13으로 고정 필수 (SDK 3.7.2 환경)

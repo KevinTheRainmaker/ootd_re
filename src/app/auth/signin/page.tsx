@@ -42,21 +42,6 @@ function SignInContent() {
           </svg>
           Google로 로그인
         </button>
-
-        <button
-          onClick={() => signIn("kakao", { callbackUrl })}
-          className="flex items-center justify-center gap-3 w-full h-12 rounded-full bg-[#FEE500] text-sm font-medium text-[#191919] hover:bg-[#F0D800] transition-colors cursor-pointer"
-        >
-          <svg
-            className="w-5 h-5"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.552 1.483 4.796 3.737 6.18-.165.617-.597 2.237-.684 2.583-.108.43.157.425.33.31.136-.092 2.162-1.47 3.036-2.065A11.29 11.29 0 0012 17.998c5.523 0 10-3.477 10-7.498C22 6.477 17.523 3 12 3z" />
-          </svg>
-          Kakao로 로그인
-        </button>
       </div>
 
       <p className="text-xs text-zinc-400 text-center max-w-xs leading-relaxed">

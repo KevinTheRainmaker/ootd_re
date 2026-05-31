@@ -1,14 +1,23 @@
-import { withAuth } from "next-auth/middleware";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth({
-  pages: {
-    signIn: "/auth/signin",
-  },
-});
+export async function middleware(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  if (!token) {
+    const signInUrl = new URL("/auth/signin", req.url);
+    signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // /api/auth는 NextAuth 내부 경로 — 보호 대상 제외 (의도적)
     "/upload/:path*",
     "/card/:path*",
     "/ootd/:path*",

@@ -1,0 +1,12 @@
+{
+  "active": true,
+  "iteration": 0,
+  "max_iterations": 100,
+  "prompt": "TTH 사일로: 다음 미완료 스토리를 처리하라. progress.txt를 읽고 시작.",
+  "completion_promise": "DONE",
+  "started_at": "2026-05-31T00:00:00.000Z",
+  "status": "running",
+  "team": "closet",
+  "complexity": "High",
+  "eval_level": "Full"
+}

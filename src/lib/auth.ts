@@ -1,6 +1,6 @@
 import { type NextAuthOptions, getServerSession } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import GoogleProvider from "next-auth/providers/google";
-import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
 import { supabaseAdmin } from "@/lib/supabase";
 
 declare module "next-auth" {
@@ -14,44 +14,10 @@ declare module "next-auth" {
   }
 }
 
-interface KakaoProfile {
-  id: number;
-  kakao_account?: {
-    email?: string;
-    profile?: {
-      nickname?: string;
-      profile_image_url?: string;
-    };
-  };
-}
-
-function KakaoProvider(
-  options: OAuthUserConfig<KakaoProfile>,
-): OAuthConfig<KakaoProfile> {
-  return {
-    id: "kakao",
-    name: "Kakao",
-    type: "oauth",
-    authorization: {
-      url: "https://kauth.kakao.com/oauth/authorize",
-      params: { scope: "profile_nickname profile_image account_email" },
-    },
-    token: "https://kauth.kakao.com/oauth/token",
-    userinfo: "https://kapi.kakao.com/v2/user/me",
-    profile(profile: KakaoProfile) {
-      // 개발 앱 미심사 계정은 email=null — fallback으로 로그인 차단 방지
-      const email =
-        profile.kakao_account?.email ?? `kakao_${profile.id}@noemail.ootd`;
-      return {
-        id: String(profile.id),
-        name: profile.kakao_account?.profile?.nickname ?? null,
-        email,
-        image: profile.kakao_account?.profile?.profile_image_url ?? null,
-      };
-    },
-    style: { logo: "/kakao.svg", bg: "#FEE500", text: "#000000" },
-    options,
-  };
+declare module "next-auth/jwt" {
+  interface JWT {
+    dbId?: string;
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -60,55 +26,51 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    KakaoProvider({
-      clientId: process.env.KAKAO_CLIENT_ID!,
-      clientSecret: process.env.KAKAO_CLIENT_SECRET!,
-    }),
   ],
   callbacks: {
     async signIn({ user }) {
-      if (!user.email) return false;
-
-      const { data: existing } = await supabaseAdmin
-        .from("users")
-        .select("id")
-        .eq("email", user.email)
-        .single();
-
-      if (existing) {
-        user.id = existing.id;
-        await supabaseAdmin
-          .from("users")
-          .update({ name: user.name ?? null, image: user.image ?? null })
-          .eq("id", existing.id);
-      } else {
-        // id를 포함하지 않음 → DB의 gen_random_uuid() 기본값으로 UUID 자동 생성
-        const { data: inserted, error } = await supabaseAdmin
-          .from("users")
-          .insert({
-            email: user.email,
-            name: user.name ?? null,
-            image: user.image ?? null,
-          })
-          .select("id")
-          .single();
-        if (error || !inserted) return false;
-        user.id = inserted.id; // DB가 생성한 UUID를 세션에 저장
-      }
-
-      return true;
+      return !!user.email;
     },
-    async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
-      }
-      return session;
-    },
+
     async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
+      // 첫 로그인 시에만 실행 (user가 있을 때)
+      if (user?.email) {
+        const email = user.email;
+
+        const { data: existing } = await supabaseAdmin
+          .from("users")
+          .select("id")
+          .eq("email", email)
+          .single();
+
+        if (existing) {
+          token.dbId = existing.id;
+          await supabaseAdmin
+            .from("users")
+            .update({ name: user.name ?? null, image: user.image ?? null })
+            .eq("id", existing.id);
+        } else {
+          const { data: inserted } = await supabaseAdmin
+            .from("users")
+            .insert({
+              email,
+              name: user.name ?? null,
+              image: user.image ?? null,
+            })
+            .select("id")
+            .single();
+          token.dbId = inserted?.id ?? undefined;
+        }
       }
       return token;
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, token }: { session: any; token: JWT }) {
+      if (session.user && token.dbId) {
+        session.user.id = token.dbId;
+      }
+      return session;
     },
   },
   pages: {
