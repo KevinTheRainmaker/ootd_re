@@ -15,7 +15,7 @@ export interface AnalyzeResponse {
   hashtags: string[];
 }
 
-export type CardType = "basic" | "ai" | "remove-bg" | "style";
+export type CardType = "basic" | "ai" | "style";
 
 export interface GenerateCardRequest {
   card_type?: CardType;

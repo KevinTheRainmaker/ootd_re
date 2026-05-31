@@ -9,7 +9,6 @@ import CardPreview, {
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
-import BgEditor from "@/components/card/BgEditor";
 import type { AnalyzeResponse, CardType } from "@/types/api";
 import type { Mood } from "@/types";
 
@@ -38,7 +37,6 @@ const CARD_TYPES: {
 }[] = [
   { type: "basic", label: "기본", icon: "photo_library", counted: false },
   { type: "ai", label: "AI 카드", icon: "auto_awesome", counted: true },
-  { type: "remove-bg", label: "배경 제거", icon: "hide_image", counted: false },
   { type: "style", label: "스타일", icon: "palette", counted: true },
 ];
 
@@ -62,8 +60,6 @@ function CardPageInner() {
     current: number;
     limit: number;
   } | null>(null);
-  // 배경 제거 진행 중 (BgEditor 내부 WASM 처리)
-  const [removingBg, setRemovingBg] = useState(false);
   const [regenModalOpen, setRegenModalOpen] = useState(false);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
@@ -95,7 +91,7 @@ function CardPageInner() {
 
   const handleSelectType = useCallback(
     async (type: CardType) => {
-      if (type === cardType || generating || removingBg || !ootdData) return;
+      if (type === cardType || generating || !ootdData) return;
 
       setCardType(type);
 
@@ -103,9 +99,6 @@ function CardPageInner() {
         setCurrentCardUrl(ootdData.original_image_url);
         return;
       }
-
-      // remove-bg: BgEditor가 마운트되면 WASM으로 자동 처리
-      if (type === "remove-bg") return;
 
       // AI/Style: usage 체크 후 생성
       setGenerating(true);
@@ -147,38 +140,7 @@ function CardPageInner() {
         setGenerating(false);
       }
     },
-    [cardType, generating, removingBg, ootdData, addToast],
-  );
-
-  /** BgEditor에서 합성 완료된 dataURL → Supabase 업로드 → card_image_url 갱신 */
-  const handleBgResult = useCallback(
-    async (dataUrl: string) => {
-      if (!ootdData) return;
-      try {
-        // dataURL → Blob → File
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `bg-${Date.now()}.png`, {
-          type: "image/png",
-        });
-        const form = new FormData();
-        form.append("file", file);
-        const uploadRes = await fetch("/api/ootd/upload", {
-          method: "POST",
-          body: form,
-        });
-        if (uploadRes.ok) {
-          const { url } = await uploadRes.json();
-          setCurrentCardUrl(url);
-        } else {
-          // 업로드 실패 시 dataURL 직접 사용 (저장 시 재업로드)
-          setCurrentCardUrl(dataUrl);
-        }
-      } catch {
-        setCurrentCardUrl(dataUrl);
-      }
-    },
-    [ootdData],
+    [cardType, generating, ootdData, addToast],
   );
 
   const handleDownload = useCallback(async () => {
@@ -336,12 +298,10 @@ function CardPageInner() {
 
       {/* 카드 미리보기 */}
       <div className="relative w-full max-w-sm">
-        {(generating || removingBg) && (
+        {generating && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/30 rounded-2xl gap-3">
             <div className="w-8 h-8 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            <p className="text-white text-xs font-medium">
-              {removingBg ? "배경 제거 중..." : "카드 생성 중..."}
-            </p>
+            <p className="text-white text-xs font-medium">카드 생성 중...</p>
           </div>
         )}
         <CardPreview imageUrl={currentCardUrl} />
@@ -414,19 +374,6 @@ function CardPageInner() {
               );
             })}
           </div>
-
-          {/* 배경 제거 탭 선택 시: BgEditor (내부에서 로딩 표시) */}
-          {cardType === "remove-bg" && (
-            <div className="mt-4">
-              {ootdData ? (
-                <BgEditor
-                  originalUrl={ootdData.original_image_url}
-                  onResult={handleBgResult}
-                  onLoadingChange={setRemovingBg}
-                />
-              ) : null}
-            </div>
-          )}
         </div>
       )}
 

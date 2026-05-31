@@ -11,7 +11,7 @@ import type {
 } from "@/types/api";
 
 /** basic은 무제한 무료. 나머지는 무료 월 5회 / Pro 월 30회 */
-const USAGE_COUNTED_TYPES: CardType[] = ["ai", "remove-bg", "style"];
+const USAGE_COUNTED_TYPES: CardType[] = ["ai", "style"];
 
 export async function POST(
   req: NextRequest,

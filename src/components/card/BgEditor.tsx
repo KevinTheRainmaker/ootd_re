@@ -50,8 +50,7 @@ export default function BgEditor({
         // 동적 import — WASM 번들은 사용 시점에 로드
         const { removeBackground } = await import("@imgly/background-removal");
         const blob = await removeBackground(originalUrl, {
-          publicPath:
-            "https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.7.0/dist/",
+          publicPath: "/bg-removal-data/",
         });
         if (!cancelled) setRemovedBlob(blob);
       } catch (e) {
