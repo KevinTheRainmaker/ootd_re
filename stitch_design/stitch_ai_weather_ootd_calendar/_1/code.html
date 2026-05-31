@@ -1,0 +1,540 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>CLOSET | Fashion Feed</title>
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Material Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-tint": "#5f5e5e",
+              "secondary-fixed": "#e2e2e4",
+              "on-background": "#1c1b1b",
+              "inverse-surface": "#313030",
+              "error-container": "#ffdad6",
+              "outline-variant": "#c4c7c7",
+              "primary-fixed-dim": "#c8c6c5",
+              "on-secondary-container": "#616365",
+              "secondary-container": "#dfdfe1",
+              "surface-bright": "#fdf8f8",
+              "inverse-primary": "#c8c6c5",
+              "on-secondary-fixed-variant": "#454749",
+              "on-primary-container": "#858383",
+              "tertiary-fixed": "#e2e2e7",
+              "on-error": "#ffffff",
+              "on-surface": "#1c1b1b",
+              "on-secondary-fixed": "#1a1c1d",
+              "on-secondary": "#ffffff",
+              "surface-dim": "#ddd9d8",
+              "surface-container-highest": "#e5e2e1",
+              primary: "#000000",
+              "primary-fixed": "#e5e2e1",
+              "on-tertiary-fixed": "#1a1c1f",
+              tertiary: "#000000",
+              "surface-container-high": "#ebe7e6",
+              secondary: "#5d5e60",
+              error: "#ba1a1a",
+              "on-primary": "#ffffff",
+              background: "#fdf8f8",
+              "on-tertiary-fixed-variant": "#45474b",
+              "on-surface-variant": "#444748",
+              "inverse-on-surface": "#f4f0ef",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-fixed": "#1c1b1b",
+              "primary-container": "#1c1b1b",
+              surface: "#fdf8f8",
+              "secondary-fixed-dim": "#c6c6c8",
+              "on-tertiary-container": "#838488",
+              "on-tertiary": "#ffffff",
+              outline: "#747878",
+              "surface-variant": "#e5e2e1",
+              "tertiary-fixed-dim": "#c6c6cb",
+              "surface-container-low": "#f7f3f2",
+              "tertiary-container": "#1a1c1f",
+              "surface-container": "#f1edec",
+              "on-primary-fixed-variant": "#474746",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "container-padding-desktop": "40px",
+              gutter: "16px",
+              base: "8px",
+              "stack-lg": "24px",
+              "stack-sm": "4px",
+              "stack-md": "12px",
+              "container-padding-mobile": "20px",
+            },
+            fontFamily: {
+              "title-md": ["Montserrat"],
+              "display-lg": ["Montserrat"],
+              "headline-lg-mobile": ["Montserrat"],
+              "label-sm": ["Inter"],
+              "headline-lg": ["Montserrat"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"],
+            },
+            fontSize: {
+              "title-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+              "display-lg": [
+                "48px",
+                {
+                  lineHeight: "56px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "headline-lg-mobile": [
+                "24px",
+                { lineHeight: "32px", fontWeight: "600" },
+              ],
+              "label-sm": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.05em",
+                  fontWeight: "600",
+                },
+              ],
+              "headline-lg": [
+                "32px",
+                { lineHeight: "40px", fontWeight: "600" },
+              ],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .glass-header {
+        background: rgba(253, 248, 248, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .post-card {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-background min-h-screen pb-24">
+    <!-- Top Navigation -->
+    <header
+      class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-container/80 backdrop-blur-3xl flex justify-between items-center px-gutter py-4"
+    >
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary" data-icon="cloud"
+          >cloud</span
+        >
+        <span
+          class="font-display-lg text-title-md font-bold tracking-tighter text-on-surface"
+          >CLOSET</span
+        >
+      </div>
+      <div class="flex gap-4">
+        <button class="active:scale-98 transition-all hover:opacity-70">
+          <span
+            class="material-symbols-outlined text-primary"
+            data-icon="calendar_today"
+            >calendar_today</span
+          >
+        </button>
+        <button class="active:scale-98 transition-all hover:opacity-70">
+          <span
+            class="material-symbols-outlined text-primary"
+            data-icon="notifications"
+            >notifications</span
+          >
+        </button>
+      </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main class="pt-20 px-gutter max-w-2xl mx-auto space-y-stack-lg">
+      <!-- Story/Trending Bar -->
+      <section class="overflow-x-auto no-scrollbar flex gap-4 py-2">
+        <div class="flex-shrink-0 flex flex-col items-center gap-1">
+          <div class="w-16 h-16 rounded-full border-2 border-primary p-0.5">
+            <img
+              class="w-full h-full rounded-full object-cover"
+              data-alt="A professional close-up studio portrait of a stylish woman with soft lighting against a neutral grey background. Her expression is confident and modern, reflecting a high-fashion aesthetic. The lighting is diffused, creating a serene and editorial atmosphere consistent with a luxury brand identity."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8QF7gVuTAjVYJfX1iUDwRIShRPR3gOJPv9tGFSR3RzmQmlhnpDX9IOKtD3URMMzKxQYSzr_4Ssk-PDbIdnaZ2SFZ8qXvcZiILZMufp5QxvYO483T-VCiIbNW2lVDDlWuaxpPny2o5fwXmdx0do66l-XzVr8i-AdVacSABXSAQ13ETCBolMw6GFJfX0LzqCI0sypx8vASF7unHlTBl52QOcSMTeVvkkry52w9gCyCGnEio45DWoaaMPJ-O16gygZ3cXhkv7PBY2qxu"
+            />
+          </div>
+          <span class="font-label-sm text-[10px] text-secondary">Trends</span>
+        </div>
+        <!-- Repeatable Items -->
+        <div class="flex-shrink-0 flex flex-col items-center gap-1">
+          <div
+            class="w-16 h-16 rounded-full border border-outline-variant/30 p-0.5"
+          >
+            <img
+              class="w-full h-full rounded-full object-cover"
+              data-alt="A stylish man wearing a minimalist linen shirt in a sun-drenched outdoor setting. The mood is relaxed and Mediterranean with warm, natural sunlight casting soft shadows. The visual style is clean and high-end, focusing on neutral tones and sophisticated textures."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN038RHvi8xZlpH0gfYmN9eEDdjPzJTOydy69AEBkMqbcTxwI6AahzVv_oB9dlfC15CZbs4B259L43spSCarMXaL0h46JqZKHu4HeZV70_zq-uNgNjOBIToG8JYSuaWjOSw4QWWERpj8LQZQTUvChHHq2SHbGDjDXv8E3LgjQo3l210GrK9C4GuxF8dNKx0awiu24vKZCbxWxEp05j7bP4uPbAtdmJn8Umx9uZ2kfPkk9n8MqPgcFxzE4y2HNk7wojG58JUpJMVQOW"
+            />
+          </div>
+          <span class="font-label-sm text-[10px] text-secondary"
+            >Minimalist</span
+          >
+        </div>
+        <div class="flex-shrink-0 flex flex-col items-center gap-1">
+          <div
+            class="w-16 h-16 rounded-full border border-outline-variant/30 p-0.5"
+          >
+            <img
+              class="w-full h-full rounded-full object-cover"
+              data-alt="A vibrant full-length fashion shot of a model wearing bold street-wear in a modern urban environment. The colors are crisp and saturated, emphasizing a trend-conscious and energetic personality. The lighting is bright daylight, creating a clean and sharp visual aesthetic."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBP4iVj_gzJLPLOrpddfbEXzz8XHxeyrBJ36FS9apNMZAfI3QXdoGoAMz8WjTjDZmQSg0ugwduLXE9UIpwqsQIDe14xfvgwxpnenX-sSQ0Jjd0dvn2dbDi81PMpWvUrJwYNrZVgvUtrR0uwzKP4a71IB9zXrCUVb23ujb_YJK1U7rPAeIeYmytIVC_SCdirVaHana9f-ZvHPy70kY67AqWOzI6Qu5aWr8r4rnEfZ1Q-V1qHXwlxQBZi2bghQC-DdGcsmv5jsYQE7cBz"
+            />
+          </div>
+          <span class="font-label-sm text-[10px] text-secondary"
+            >Streetwear</span
+          >
+        </div>
+        <div class="flex-shrink-0 flex flex-col items-center gap-1">
+          <div
+            class="w-16 h-16 rounded-full border border-outline-variant/30 p-0.5"
+          >
+            <img
+              class="w-full h-full rounded-full object-cover"
+              data-alt="A refined portrait of a man in a tailored charcoal suit standing in a modern architectural space. The mood is sophisticated and professional with cool-toned studio lighting. The aesthetic is extremely minimalist and clean, highlighting high-quality fabrics and sharp tailoring."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfJc3dKnLaPGsqi-hMnTGw-bxGTnFL38F_hcBA0xj4WTf5K3SiuegCJmplnAeyXuqatDsyFuOF0NyG9kPXioi-BtcRtOchGxM9_acc9_m97b9RDz1fBkPF-DWWYLdrkwjmFqO7mMrtDlje7_TJbHSacjVuU-oGV6Yy1u99_1QL5FrsMe0qxwh5876jLNLO2xHbWah9F738p_a8Z-ZgFbApWa3MErtu54pEpJSHlvzDmpiRDXQolQvzHDfcfhzKRjKHhFhxaEqQ7Q97"
+            />
+          </div>
+          <span class="font-label-sm text-[10px] text-secondary">Tailored</span>
+        </div>
+      </section>
+      <!-- Feed Posts -->
+      <div class="space-y-8">
+        <!-- Post 1 -->
+        <article
+          class="post-card bg-surface-container-lowest rounded-xl overflow-hidden"
+        >
+          <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img
+                class="w-10 h-10 rounded-full object-cover border border-outline-variant/20"
+                data-alt="A close-up headshot of a stylish man with a neat beard, looking directly into the camera with a friendly and professional expression. The background is a soft-focus urban loft with warm, ambient lighting. The overall aesthetic is clean, modern, and high-fashion."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9ysNIw22_sEv85UARhpt7IBrrAwCLmzkNWVAQWrZz0zBLtccZAPFAj6dOn0jTYz3AKULqogVK9hYvIqq702kIwYGM45GvHCggCG3WcHkQhDas-2gGr5iibz4YrdI8F37v_U8GbyuN7cYy_p8eC423z2oOmBIyOWuCpounJ2I-EWs1xQ8Imv-G5AqUA77nPtK4GKobdlUvy8X9jUsTCeOjOa--1J0GjfexF_Kth1KrKHrCxXcfqH7WWi-YYRY21p0f5jhB7JUU_0GV"
+              />
+              <div>
+                <p class="font-title-md text-sm text-on-surface">
+                  julian_coats
+                </p>
+                <p class="font-label-sm text-[10px] text-secondary">
+                  New York, NY
+                </p>
+              </div>
+            </div>
+            <button
+              class="bg-primary text-on-primary px-4 py-1.5 rounded-full font-label-sm text-[12px] hover:opacity-90 transition-all"
+            >
+              Follow
+            </button>
+          </div>
+          <div class="relative group">
+            <img
+              class="w-full h-[500px] object-cover"
+              data-alt="A high-fashion editorial photo of a woman walking down a clean, minimalist city street wearing a long beige trench coat and black leather boots. The lighting is soft overcast daylight, providing an even and flattering glow. The mood is sophisticated, curated, and calm."
+              loading="lazy"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_6AMSzdZKOEgsJtHfPZWXW7XkhYCGFbQdQBW9hJvvmdIwhKHd-wlDgNZUZL5aTw5chMyh27oujXSMz-rTOpWzLGiPDG8T-BsgTBfkFWhdYrBzA9xP3YAqWwfgbvO6ANBEGdzrdimL94i7ToZTE6ybvEHLyUhm-53AkJ8R-MfasvcxG1Ln8cJYeGeCUPx1BvHF_EemvzIszgfS4QI5kaP0793Yh0yApKzf6yZmXxo9gD6eO0pHvdRPEegVBCtaWtvQ8_d0ja10zGgr"
+            />
+            <div
+              class="absolute bottom-4 right-4 bg-surface/80 backdrop-blur-md px-3 py-1.5 rounded-lg flex items-center gap-2"
+            >
+              <span
+                class="material-symbols-outlined text-[16px]"
+                data-icon="wb_sunny"
+                >wb_sunny</span
+              >
+              <span class="font-label-sm text-[12px]">68°F</span>
+            </div>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center gap-4">
+              <button
+                class="flex items-center gap-1 active:scale-95 transition-transform"
+                onclick="toggleLike(this)"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface"
+                  data-icon="favorite"
+                  >favorite</span
+                >
+                <span class="font-label-sm text-[12px]">1.2k</span>
+              </button>
+              <button class="flex items-center gap-1">
+                <span
+                  class="material-symbols-outlined text-on-surface"
+                  data-icon="chat_bubble"
+                  >chat_bubble</span
+                >
+                <span class="font-label-sm text-[12px]">48</span>
+              </button>
+              <button class="flex items-center gap-1 ml-auto">
+                <span
+                  class="material-symbols-outlined text-on-surface"
+                  data-icon="ios_share"
+                  >ios_share</span
+                >
+              </button>
+            </div>
+            <div class="space-y-1">
+              <p class="font-body-md text-sm">
+                <span class="font-bold">julian_coats</span> Layers for the early
+                spring breeze in Manhattan. Focus on texture today.
+              </p>
+              <div class="flex flex-wrap gap-2 pt-1">
+                <span
+                  class="bg-secondary-container/50 text-on-secondary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-[10px]"
+                  >#Minimalist</span
+                >
+                <span
+                  class="bg-secondary-container/50 text-on-secondary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-[10px]"
+                  >#Streetstyle</span
+                >
+                <span
+                  class="bg-secondary-container/50 text-on-secondary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-[10px]"
+                  >#Spring24</span
+                >
+              </div>
+            </div>
+          </div>
+        </article>
+        <!-- Post 2 -->
+        <article
+          class="post-card bg-surface-container-lowest rounded-xl overflow-hidden"
+        >
+          <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img
+                class="w-10 h-10 rounded-full object-cover border border-outline-variant/20"
+                data-alt="A professional studio portrait of a woman with a bright, welcoming smile. The lighting is high-key and soft, highlighting her natural features against a white background. The aesthetic is clean and modern, evoking a sense of approachable fashion expertise."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAY0V59_Z9R9dhQvw7qICeuHBM4yspTPQKZyCjsz6mN2xoiSiJfYMSLZHwztqf17SYrXHJxQ-JCTrD32eCTxH6jXqWjgFt6CG4JeZoavz5Tg7XnlGwpD_yb2RsYmjC23opzxDuE3o5niTXtmqAOHlb2V3Kmh48b7GMhBBOyZw0Wx4fgHrne_UDsaj5AhB-8ESJ4hK4t4SHffmDQijoFaB18_VwAIm1mKzrKWwVLKTtSWz5tkrNIxVMN1TESGW_ndx6PV1KvEd7gCZp"
+              />
+              <div>
+                <p class="font-title-md text-sm text-on-surface">
+                  elara_design
+                </p>
+                <p class="font-label-sm text-[10px] text-secondary">
+                  Paris, France
+                </p>
+              </div>
+            </div>
+            <button
+              class="bg-primary text-on-primary px-4 py-1.5 rounded-full font-label-sm text-[12px] hover:opacity-90 transition-all"
+            >
+              Follow
+            </button>
+          </div>
+          <div class="relative group">
+            <img
+              class="w-full h-[500px] object-cover"
+              data-alt="An editorial fashion photograph of a person wearing a structured avant-garde jacket in a clean, white architectural space. The lighting creates sharp, dramatic shadows, emphasizing the garment's unique silhouette. The overall mood is high-end, artistic, and futuristic."
+              loading="lazy"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgdtnvqee4Z1_pr2yowOCRbsjvuPtJCAcD1nEvSHusvOtMTAC2rBwTslR_eGYnt-liWDgE02dlNhkfugQZYBLyWBNjTuMKm0-RwLVbArow4WxjUaYlzV6YXb9AuM95sFcKmr3smsAkMup1Np6RdanIF2TH9HAxlxFZeWTUmZs-PiRLxh5I5jvye29yJXwT80Bx96qV3k_AFJayBu1Vff_6E7uGluLF-b1e-CMzeQEEyEeIjvDTmOc8ZNMnu2aH-PvNGa-skanPXjNr"
+            />
+            <div
+              class="absolute bottom-4 right-4 bg-surface/80 backdrop-blur-md px-3 py-1.5 rounded-lg flex items-center gap-2"
+            >
+              <span
+                class="material-symbols-outlined text-[16px]"
+                data-icon="cloud"
+                >cloud</span
+              >
+              <span class="font-label-sm text-[12px]">54°F</span>
+            </div>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center gap-4">
+              <button
+                class="flex items-center gap-1 active:scale-95 transition-transform"
+                onclick="toggleLike(this)"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface"
+                  data-icon="favorite"
+                  >favorite</span
+                >
+                <span class="font-label-sm text-[12px]">3.4k</span>
+              </button>
+              <button class="flex items-center gap-1">
+                <span
+                  class="material-symbols-outlined text-on-surface"
+                  data-icon="chat_bubble"
+                  >chat_bubble</span
+                >
+                <span class="font-label-sm text-[12px]">129</span>
+              </button>
+              <button class="flex items-center gap-1 ml-auto">
+                <span
+                  class="material-symbols-outlined text-on-surface"
+                  data-icon="ios_share"
+                  >ios_share</span
+                >
+              </button>
+            </div>
+            <div class="space-y-1">
+              <p class="font-body-md text-sm">
+                <span class="font-bold">elara_design</span> Sculptural forms for
+                a gray afternoon in Paris. Monochromatic mood.
+              </p>
+              <div class="flex flex-wrap gap-2 pt-1">
+                <span
+                  class="bg-secondary-container/50 text-on-secondary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-[10px]"
+                  >#AvantGarde</span
+                >
+                <span
+                  class="bg-secondary-container/50 text-on-secondary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-[10px]"
+                  >#Monochrome</span
+                >
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </main>
+    <!-- Bottom Navigation Bar -->
+    <nav
+      class="fixed bottom-0 w-full z-50 rounded-t-[32px] bg-surface/80 dark:bg-surface-container/80 backdrop-blur-3xl border-t border-outline-variant/20 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-6 py-4"
+    >
+      <!-- Home -->
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="home">home</span>
+        <span class="font-label-sm text-label-sm">Home</span>
+      </a>
+      <!-- Fashion (ACTIVE) -->
+      <a
+        class="flex flex-col items-center justify-center text-primary dark:text-on-primary-fixed font-bold hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined"
+          data-icon="style"
+          style="font-variation-settings: &quot;FILL&quot; 1"
+          >style</span
+        >
+        <span class="font-label-sm text-label-sm">Fashion</span>
+      </a>
+      <!-- Add (Large Centered) -->
+      <div class="relative -top-6">
+        <button
+          class="bg-primary text-on-primary w-16 h-16 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+        >
+          <span class="material-symbols-outlined !text-[32px]" data-icon="add"
+            >add</span
+          >
+        </button>
+      </div>
+      <!-- Shop -->
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="shopping_bag"
+          >shopping_bag</span
+        >
+        <span class="font-label-sm text-label-sm">Shop</span>
+      </a>
+      <!-- Profile -->
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="person">person</span>
+        <span class="font-label-sm text-label-sm">Profile</span>
+      </a>
+    </nav>
+    <script>
+      function toggleLike(btn) {
+        const icon = btn.querySelector(".material-symbols-outlined");
+        const count = btn.querySelector("span:not(.material-symbols-outlined)");
+        let currentCount =
+          parseFloat(count.innerText.replace("k", "")) *
+          (count.innerText.includes("k") ? 1000 : 1);
+
+        if (icon.style.fontVariationSettings.includes("'FILL' 1")) {
+          icon.style.fontVariationSettings = "'FILL' 0";
+          icon.classList.remove("text-error");
+          currentCount--;
+        } else {
+          icon.style.fontVariationSettings = "'FILL' 1";
+          icon.classList.add("text-error");
+          currentCount++;
+        }
+
+        count.innerText =
+          currentCount >= 1000
+            ? (currentCount / 1000).toFixed(1) + "k"
+            : currentCount;
+      }
+
+      // Intersection Observer for scroll animations
+      const observerOptions = {
+        threshold: 0.1,
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("opacity-100", "translate-y-0");
+            entry.target.classList.remove("opacity-0", "translate-y-4");
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll("article").forEach((el) => {
+        el.classList.add(
+          "transition-all",
+          "duration-700",
+          "opacity-0",
+          "translate-y-4",
+        );
+        observer.observe(el);
+      });
+    </script>
+  </body>
+</html>

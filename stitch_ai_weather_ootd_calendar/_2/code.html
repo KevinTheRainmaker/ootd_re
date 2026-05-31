@@ -1,0 +1,597 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      .glass-card {
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#fdf8f8",
+              "on-background": "#1c1b1b",
+              background: "#fdf8f8",
+              "surface-container-highest": "#e5e2e1",
+              "on-tertiary-fixed-variant": "#45474b",
+              "on-secondary-fixed-variant": "#454749",
+              "secondary-fixed": "#e2e2e4",
+              "surface-container-low": "#f7f3f2",
+              "inverse-on-surface": "#f4f0ef",
+              "secondary-fixed-dim": "#c6c6c8",
+              "on-surface": "#1c1b1b",
+              "outline-variant": "#c4c7c7",
+              "surface-container": "#f1edec",
+              primary: "#000000",
+              "on-secondary-fixed": "#1a1c1d",
+              "primary-container": "#1c1b1b",
+              "inverse-surface": "#313030",
+              "on-primary-fixed-variant": "#474746",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary-fixed": "#1a1c1f",
+              secondary: "#5d5e60",
+              "primary-fixed": "#e5e2e1",
+              "surface-dim": "#ddd9d8",
+              "inverse-primary": "#c8c6c5",
+              "tertiary-fixed-dim": "#c6c6cb",
+              "on-surface-variant": "#444748",
+              "on-error": "#ffffff",
+              "tertiary-fixed": "#e2e2e7",
+              "surface-tint": "#5f5e5e",
+              "primary-fixed-dim": "#c8c6c5",
+              "tertiary-container": "#1a1c1f",
+              "surface-container-high": "#ebe7e6",
+              "surface-variant": "#e5e2e1",
+              "on-primary": "#ffffff",
+              surface: "#fdf8f8",
+              "on-tertiary": "#ffffff",
+              "secondary-container": "#dfdfe1",
+              "on-primary-fixed": "#1c1b1b",
+              tertiary: "#000000",
+              "on-tertiary-container": "#838488",
+              "error-container": "#ffdad6",
+              "on-secondary-container": "#616365",
+              "on-secondary": "#ffffff",
+              "on-error-container": "#93000a",
+              "on-primary-container": "#858383",
+              error: "#ba1a1a",
+              outline: "#747878",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "16px",
+              "container-padding-mobile": "20px",
+              "stack-lg": "24px",
+              base: "8px",
+              "stack-md": "12px",
+              "container-padding-desktop": "40px",
+              "stack-sm": "4px",
+            },
+            fontFamily: {
+              "display-lg": ["Montserrat"],
+              "body-md": ["Inter"],
+              "title-md": ["Montserrat"],
+              "headline-lg-mobile": ["Montserrat"],
+              "body-lg": ["Inter"],
+              "headline-lg": ["Montserrat"],
+              "label-sm": ["Inter"],
+            },
+            fontSize: {
+              "display-lg": [
+                "48px",
+                {
+                  lineHeight: "56px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "title-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+              "headline-lg-mobile": [
+                "24px",
+                { lineHeight: "32px", fontWeight: "600" },
+              ],
+              "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+              "headline-lg": [
+                "32px",
+                { lineHeight: "40px", fontWeight: "600" },
+              ],
+              "label-sm": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.05em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-surface text-on-surface font-body-md selection:bg-primary-fixed selection:text-primary"
+  >
+    <!-- Top App Bar -->
+    <header
+      class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-container/80 backdrop-blur-3xl"
+    >
+      <div class="flex justify-between items-center px-gutter py-4 w-full">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary" data-icon="cloud"
+            >cloud</span
+          >
+          <span
+            class="font-display-lg text-[24px] font-bold tracking-tighter text-on-surface"
+            >CLOSET</span
+          >
+        </div>
+        <button class="active:scale-95 transition-transform">
+          <span
+            class="material-symbols-outlined text-primary"
+            data-icon="calendar_today"
+            >calendar_today</span
+          >
+        </button>
+      </div>
+    </header>
+    <main class="pb-28 pt-16">
+      <!-- Section 1: Weather & Recommendation (Top 30%) -->
+      <section class="relative h-[397px] w-full overflow-hidden mb-stack-lg">
+        <!-- Dynamic Weather Background -->
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-[#FFD59E] via-[#FFEDD5] to-surface-bright transition-all duration-1000"
+        >
+          <div
+            class="absolute top-10 right-10 w-48 h-48 bg-white/30 rounded-full blur-3xl animate-pulse"
+          ></div>
+        </div>
+        <div
+          class="relative h-full flex flex-col justify-between px-gutter py-stack-md pt-8"
+        >
+          <!-- Weather Stats -->
+          <div class="flex justify-between items-start">
+            <div>
+              <h2
+                class="font-display-lg text-display-lg text-primary leading-tight"
+              >
+                24°
+              </h2>
+              <div class="flex gap-stack-md text-secondary">
+                <span
+                  class="flex items-center gap-1 font-label-sm text-label-sm"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px]"
+                    data-icon="humidity_percentage"
+                    >humidity_percentage</span
+                  >
+                  42%
+                </span>
+                <span
+                  class="flex items-center gap-1 font-label-sm text-label-sm"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px]"
+                    data-icon="sunny"
+                    >sunny</span
+                  >
+                  Clear Sky
+                </span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p
+                class="font-label-sm text-label-sm uppercase tracking-widest text-secondary"
+              >
+                Monday
+              </p>
+              <p class="font-title-md text-title-md">Oct 24</p>
+            </div>
+          </div>
+          <!-- AI Recommendation Overlay -->
+          <div
+            class="glass-card bg-surface-container-lowest/80 rounded-[24px] p-stack-md shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-white/40 mb-2"
+          >
+            <div class="flex items-center justify-between mb-stack-sm">
+              <span
+                class="bg-primary text-on-primary px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase"
+                >AI Recommended</span
+              >
+              <button class="text-primary active:scale-90 transition-transform">
+                <span
+                  class="material-symbols-outlined text-[20px]"
+                  data-icon="refresh"
+                  >refresh</span
+                >
+              </button>
+            </div>
+            <div class="flex gap-stack-md overflow-x-auto no-scrollbar">
+              <div
+                class="flex-shrink-0 w-24 aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-highest"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="A high-fashion minimalist photography of a premium beige wool blazer draped over a white marble surface. The lighting is soft and natural, emphasizing the rich texture of the fabric. The overall aesthetic is clean, luxury-oriented, and contemporary with a focus on high-quality materials and professional styling."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5ZMk8ArnKG0wRTxfNdNFtsng_BeWdIkoMwzaFmuh6cddiOQwcrHOMkMcula7m3rtY6XHWK_H7m_EQUOHp5BE9PIB16Ac9kWiRmoL1ispItK8Y6RD1Pcfdid08GfXphKVbgxTNlL0IHp3k9KQyoNQ_J-NoFIdDqONOw2fcweKHj8Bj4XnECkZeY5jnDsTubMMoyWYlMjuON9nWs1NhaAcIN823X-Yd32aSPomgHZZ6AXM5hwigVr52QjBoBa1m-iA9xuZbLDVhtwbU"
+                />
+              </div>
+              <div
+                class="flex-shrink-0 w-24 aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-highest"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="Close-up shot of high-end raw denim trousers folded neatly in a sunlit boutique. The texture of the dark indigo fabric is visible, suggesting premium craftsmanship. The lighting creates subtle shadows that define the shape of the garment, maintaining a minimalist and sophisticated mood consistent with modern luxury fashion."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKtplWws5J9YObXAXIMSG1wbHlc_X5yAKRngNbyUJSklpTwsRti3ruPr8lAChh54F0-X-B653m4vybVAJJwP7N_-1DYyNQ5GEb64tXS_MHuwMXaCkRnZ2aitoToHxUiGibpAQ_CpxPVhWoy8sZ8e_Hz2xNK543toCJj9QotR7Ub35eLFNi-pWCaZcVNayrSutTb1lUtf0E69PDZwcHA8AfGMDjESr1Gi1Lu1CrcOT6BUjoGZ7WzIyaVspqBFRFE3theXs3RwQ9FWh3"
+                />
+              </div>
+              <div
+                class="flex-shrink-0 w-24 aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-highest"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="Editorial style photo of luxury leather loafers resting on a clean, architectural concrete background. The sharp lines of the shoes and the soft morning light create a refined, upscale atmosphere. The color palette is muted and neutral, embodying a sleek and professional design language suitable for an elite closet app."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1BntTHJL6c22Iul7iWGG51bOPnxVr_XufpzljLka0LyF_GirDN59EDBsnOeSXdI_Tnyw4Q3jEAjQxdFLn_tB4OAbquwSv7SQc7BYKDjJ5Nwa6uYEiAxFHwg__EqnDODKgpJZVzhzCxxRju0jckIKj0-vK1DtYZVaTM-axCMMiP-roScjXtVwynTWHZewQsFfDeWyz9_f0x-ppQONZIiZSc3dyUyx60NnTjZcZzRIh3GjR8o41dSVzqbEDtJy3UOA4IHk68CKtHQ6I"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Section 2: Calendar View (Bottom 60%) -->
+      <section class="px-gutter">
+        <div class="flex justify-between items-center mb-stack-lg">
+          <h3 class="font-headline-lg-mobile text-headline-lg-mobile">
+            Daily Rituals
+          </h3>
+          <div class="flex gap-2">
+            <button
+              class="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-colors"
+            >
+              <span
+                class="material-symbols-outlined text-[18px]"
+                data-icon="chevron_left"
+                >chevron_left</span
+              >
+            </button>
+            <button
+              class="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-colors"
+            >
+              <span
+                class="material-symbols-outlined text-[18px]"
+                data-icon="chevron_right"
+                >chevron_right</span
+              >
+            </button>
+          </div>
+        </div>
+        <!-- Calendar Grid -->
+        <div
+          class="bg-surface-container-lowest rounded-[32px] p-stack-lg shadow-[0_4px_24px_rgba(0,0,0,0.02)]"
+        >
+          <div class="grid grid-cols-7 mb-stack-md text-center">
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >S</span
+            >
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >M</span
+            >
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >T</span
+            >
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >W</span
+            >
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >T</span
+            >
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >F</span
+            >
+            <span
+              class="font-label-sm text-label-sm text-secondary uppercase tracking-widest"
+              >S</span
+            >
+          </div>
+          <div class="grid grid-cols-7 gap-y-6 text-center">
+            <!-- Day Logic -->
+            <div class="flex flex-col items-center opacity-30">
+              <span class="font-body-md text-body-md py-1">29</span>
+            </div>
+            <div class="flex flex-col items-center opacity-30">
+              <span class="font-body-md text-body-md py-1">30</span>
+            </div>
+            <!-- October Days -->
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">1</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#E57373]"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">2</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">3</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#81C784]"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">4</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">5</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#64B5F6]"></div>
+                <div class="w-1 h-1 rounded-full bg-[#BA68C8]"></div>
+              </div>
+            </div>
+            <!-- Row 2 -->
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">6</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">7</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-primary"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">8</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">9</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">10</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#FFD54F]"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">11</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">12</span>
+            </div>
+            <!-- Row 3 -->
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">13</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#81C784]"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">14</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">15</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">16</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-primary"></div>
+                <div class="w-1 h-1 rounded-full bg-[#E57373]"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">17</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">18</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">19</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#64B5F6]"></div>
+              </div>
+            </div>
+            <!-- Row 4 -->
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">20</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">21</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">22</span>
+              <div class="flex gap-[2px] mt-1">
+                <div class="w-1 h-1 rounded-full bg-[#BA68C8]"></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">23</span>
+            </div>
+            <!-- Current Date -->
+            <div class="flex flex-col items-center relative">
+              <div
+                class="absolute inset-0 -top-1 border-2 border-primary rounded-full scale-125"
+              ></div>
+              <span class="font-body-md text-body-md font-bold py-1">24</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">25</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">26</span>
+            </div>
+            <!-- Row 5 -->
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">27</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">28</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">29</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">30</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="font-body-md text-body-md py-1">31</span>
+            </div>
+            <div class="flex flex-col items-center opacity-30">
+              <span class="font-body-md text-body-md py-1">1</span>
+            </div>
+            <div class="flex flex-col items-center opacity-30">
+              <span class="font-body-md text-body-md py-1">2</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mood Legend -->
+        <div
+          class="mt-stack-lg flex flex-wrap justify-center gap-stack-md px-container-padding-mobile"
+        >
+          <span
+            class="flex items-center gap-2 font-label-sm text-label-sm text-secondary"
+          >
+            <div class="w-2 h-2 rounded-full bg-[#E57373]"></div>
+            Energetic
+          </span>
+          <span
+            class="flex items-center gap-2 font-label-sm text-label-sm text-secondary"
+          >
+            <div class="w-2 h-2 rounded-full bg-[#81C784]"></div>
+            Calm
+          </span>
+          <span
+            class="flex items-center gap-2 font-label-sm text-label-sm text-secondary"
+          >
+            <div class="w-2 h-2 rounded-full bg-[#64B5F6]"></div>
+            Productive
+          </span>
+          <span
+            class="flex items-center gap-2 font-label-sm text-label-sm text-secondary"
+          >
+            <div class="w-2 h-2 rounded-full bg-primary"></div>
+            Minimal
+          </span>
+        </div>
+      </section>
+    </main>
+    <!-- Bottom Navigation Bar -->
+    <nav
+      class="fixed bottom-0 w-full z-50 rounded-t-[32px] bg-surface/80 dark:bg-surface-container/80 backdrop-blur-3xl border-t border-outline-variant/20 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+    >
+      <div
+        class="flex justify-between items-end px-4 pb-6 pt-2 w-full max-w-md mx-auto"
+      >
+        <a
+          class="flex flex-col items-center justify-center text-primary font-bold active:scale-95 transition-transform w-16"
+          href="#"
+        >
+          <span
+            class="material-symbols-outlined"
+            data-icon="home"
+            style="font-variation-settings: &quot;FILL&quot; 1"
+            >home</span
+          >
+          <span class="font-label-sm text-[10px] mt-1">Home</span>
+        </a>
+        <a
+          class="flex flex-col items-center justify-center text-secondary hover:text-primary active:scale-95 transition-transform w-16"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="groups"
+            >groups</span
+          >
+          <span class="font-label-sm text-[10px] mt-1">Fashion</span>
+        </a>
+        <div class="relative -top-4">
+          <button
+            class="bg-primary text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+          >
+            <span class="material-symbols-outlined text-[32px]" data-icon="add"
+              >add</span
+            >
+          </button>
+          <span
+            class="font-label-sm text-[10px] text-center block mt-1 text-primary font-bold"
+            >Add</span
+          >
+        </div>
+        <a
+          class="flex flex-col items-center justify-center text-secondary hover:text-primary active:scale-95 transition-transform w-16"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="shopping_bag"
+            >shopping_bag</span
+          >
+          <span class="font-label-sm text-[10px] mt-1">Shop</span>
+        </a>
+        <a
+          class="flex flex-col items-center justify-center text-secondary hover:text-primary active:scale-95 transition-transform w-16"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="person"
+            >person</span
+          >
+          <span class="font-label-sm text-[10px] mt-1">Profile</span>
+        </a>
+      </div>
+    </nav>
+    <script>
+      // Simple micro-interaction for weather card
+      const weatherCard = document.querySelector("section.relative");
+      document.addEventListener("mousemove", (e) => {
+        const x = (e.clientX / window.innerWidth) * 10;
+        const y = (e.clientY / window.innerHeight) * 10;
+        weatherCard.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+      });
+
+      // Dynamic greeting based on time
+      window.addEventListener("DOMContentLoaded", () => {
+        const hour = new Date().getHours();
+        const brandLogo = document.querySelector(".font-display-lg");
+        if (hour < 12) brandLogo.innerHTML = "MORNING";
+        else if (hour < 18) brandLogo.innerHTML = "CLOSET";
+        else brandLogo.innerHTML = "EVENING";
+      });
+    </script>
+  </body>
+</html>

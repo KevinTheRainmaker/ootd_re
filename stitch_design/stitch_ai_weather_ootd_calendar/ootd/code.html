@@ -1,0 +1,512 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>OOTD Card Creator | CLOSET</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#fdf8f8",
+              "on-background": "#1c1b1b",
+              background: "#fdf8f8",
+              "surface-container-highest": "#e5e2e1",
+              "on-tertiary-fixed-variant": "#45474b",
+              "on-secondary-fixed-variant": "#454749",
+              "secondary-fixed": "#e2e2e4",
+              "surface-container-low": "#f7f3f2",
+              "inverse-on-surface": "#f4f0ef",
+              "secondary-fixed-dim": "#c6c6c8",
+              "on-surface": "#1c1b1b",
+              "outline-variant": "#c4c7c7",
+              "surface-container": "#f1edec",
+              primary: "#000000",
+              "on-secondary-fixed": "#1a1c1d",
+              "primary-container": "#1c1b1b",
+              "inverse-surface": "#313030",
+              "on-primary-fixed-variant": "#474746",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary-fixed": "#1a1c1f",
+              secondary: "#5d5e60",
+              "primary-fixed": "#e5e2e1",
+              "surface-dim": "#ddd9d8",
+              "inverse-primary": "#c8c6c5",
+              "tertiary-fixed-dim": "#c6c6cb",
+              "on-surface-variant": "#444748",
+              "on-error": "#ffffff",
+              "tertiary-fixed": "#e2e2e7",
+              "surface-tint": "#5f5e5e",
+              "primary-fixed-dim": "#c8c6c5",
+              "tertiary-container": "#1a1c1f",
+              "surface-container-high": "#ebe7e6",
+              "surface-variant": "#e5e2e1",
+              "on-primary": "#ffffff",
+              surface: "#fdf8f8",
+              "on-tertiary": "#ffffff",
+              "secondary-container": "#dfdfe1",
+              "on-primary-fixed": "#1c1b1b",
+              tertiary: "#000000",
+              "on-tertiary-container": "#838488",
+              "error-container": "#ffdad6",
+              "on-secondary-container": "#616365",
+              "on-secondary": "#ffffff",
+              "on-error-container": "#93000a",
+              "on-primary-container": "#858383",
+              error: "#ba1a1a",
+              outline: "#747878",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              gutter: "16px",
+              "container-padding-mobile": "20px",
+              "stack-lg": "24px",
+              base: "8px",
+              "stack-md": "12px",
+              "container-padding-desktop": "40px",
+              "stack-sm": "4px",
+            },
+            fontFamily: {
+              "display-lg": ["Montserrat"],
+              "body-md": ["Inter"],
+              "title-md": ["Montserrat"],
+              "headline-lg-mobile": ["Montserrat"],
+              "body-lg": ["Inter"],
+              "headline-lg": ["Montserrat"],
+              "label-sm": ["Inter"],
+            },
+            fontSize: {
+              "display-lg": [
+                "48px",
+                {
+                  lineHeight: "56px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "title-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+              "headline-lg-mobile": [
+                "24px",
+                { lineHeight: "32px", fontWeight: "600" },
+              ],
+              "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+              "headline-lg": [
+                "32px",
+                { lineHeight: "40px", fontWeight: "600" },
+              ],
+              "label-sm": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.05em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .glass {
+        background: rgba(253, 248, 248, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .hotspot-pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+      }
+      .magazine-shadow {
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-surface-bright text-on-background font-body-md min-h-screen">
+    <!-- Top Navigation (Shell Implementation) -->
+    <header
+      class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-container/80 backdrop-blur-3xl flex justify-between items-center px-gutter py-4 w-full"
+    >
+      <div
+        class="flex items-center gap-2 active:scale-98 transition-all hover:opacity-70 cursor-pointer"
+      >
+        <span class="material-symbols-outlined text-primary" data-icon="close"
+          >close</span
+        >
+      </div>
+      <h1
+        class="font-display-lg text-display-lg font-bold tracking-tighter text-on-surface"
+      >
+        CLOSET
+      </h1>
+      <div
+        class="flex items-center gap-2 active:scale-98 transition-all hover:opacity-70 cursor-pointer"
+      >
+        <span
+          class="material-symbols-outlined text-primary"
+          data-icon="more_vert"
+          >more_vert</span
+        >
+      </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main
+      class="pt-24 pb-32 px-container-padding-mobile md:px-container-padding-desktop max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-stack-lg"
+    >
+      <!-- Left: Magazine-Style Preview Column -->
+      <section class="lg:col-span-7 flex flex-col gap-stack-md">
+        <!-- Magazine Card Preview -->
+        <div
+          class="relative aspect-[3/4] rounded-[24px] overflow-hidden magazine-shadow bg-surface-container-low group"
+        >
+          <img
+            alt="Editorial Style Outfit"
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            data-alt="A high-fashion editorial photograph of a model wearing a minimalist beige oversized coat and structured trousers against a clean, architectural concrete background. The lighting is soft and directional, creating elegant shadows that emphasize the garment's silhouette. The overall aesthetic is sophisticated and modern, mirroring a luxury fashion magazine spread with a neutral color palette of creams, tans, and blacks."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsIcm91VKAJ92GNxk7yJKJasC4yxVY0gsn_SWUHpontv65RgEJ_l6jnisyQBHHiZTAJIVnXOl2Rh9rP9sFsLRAsd5MLOvXe2RYOLxcrrgh3eZdKDxvFETIk3wg79kpB6Z5L2LvK5nCocVsXlsHOsjevQviscDzgguAGaU6SVXadJvUZYeMJqDCKtZnmMnJa0qNU85FsMCg8g37BaM1qv3yolCQmvG8MijK_1OTqmgRYI9pmGQ-F9rF6_9d-lif7cj2t_Yn4uVTm8AU"
+          />
+          <!-- Interactive Hotspots -->
+          <div class="absolute top-[30%] left-[45%] group/spot cursor-pointer">
+            <div
+              class="w-6 h-6 bg-white/90 rounded-full border-2 border-primary hotspot-pulse flex items-center justify-center"
+            >
+              <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+            </div>
+            <div
+              class="absolute left-8 top-1/2 -translate-y-1/2 glass px-3 py-1.5 rounded-lg opacity-0 group-hover/spot:opacity-100 transition-opacity whitespace-nowrap"
+            >
+              <p class="font-label-sm text-label-sm text-primary uppercase">
+                Acne Studios
+              </p>
+              <p class="font-label-sm text-[10px] text-secondary">
+                Wool Blend Coat
+              </p>
+            </div>
+          </div>
+          <div
+            class="absolute bottom-[25%] left-[55%] group/spot cursor-pointer"
+          >
+            <div
+              class="w-6 h-6 bg-white/90 rounded-full border-2 border-primary hotspot-pulse flex items-center justify-center"
+            >
+              <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+            </div>
+            <div
+              class="absolute left-8 top-1/2 -translate-y-1/2 glass px-3 py-1.5 rounded-lg opacity-0 group-hover/spot:opacity-100 transition-opacity whitespace-nowrap"
+            >
+              <p class="font-label-sm text-label-sm text-primary uppercase">
+                Jil Sander
+              </p>
+              <p class="font-label-sm text-[10px] text-secondary">
+                Canvas Tote
+              </p>
+            </div>
+          </div>
+          <!-- Card Info Overlays -->
+          <div
+            class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end"
+          >
+            <span
+              class="font-label-sm text-label-sm text-white/80 uppercase tracking-widest mb-1"
+              >Thursday, Oct 24</span
+            >
+            <h2
+              class="font-headline-lg-mobile text-headline-lg-mobile text-white font-bold"
+            >
+              MONOCHROMATIC FALL
+            </h2>
+            <div class="flex gap-2 mt-4">
+              <span
+                class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-[10px] font-bold uppercase tracking-tighter"
+                >Office</span
+              >
+              <span
+                class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-[10px] font-bold uppercase tracking-tighter"
+                >Sophisticated</span
+              >
+            </div>
+          </div>
+        </div>
+        <!-- Pro Information Banner -->
+        <div
+          class="bg-primary-container p-4 rounded-xl flex items-center gap-4"
+        >
+          <span
+            class="material-symbols-outlined text-surface-bright"
+            data-icon="auto_awesome"
+            >auto_awesome</span
+          >
+          <p class="font-label-sm text-label-sm text-on-primary-container">
+            AI card generation features are available for
+            <span class="text-surface-bright underline cursor-pointer"
+              >Pro subscribers</span
+            >.
+          </p>
+        </div>
+      </section>
+      <!-- Right: Controls & Options -->
+      <aside class="lg:col-span-5 flex flex-col gap-stack-lg">
+        <!-- Metadata List Section -->
+        <section class="flex flex-col gap-stack-md">
+          <h3 class="font-title-md text-title-md text-primary">
+            Outfit Composition
+          </h3>
+          <div class="space-y-3">
+            <div
+              class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl border border-outline-variant/10 hover:border-primary/20 transition-all"
+            >
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-12 h-12 bg-surface-container-highest rounded-lg flex items-center justify-center"
+                >
+                  <span
+                    class="material-symbols-outlined text-secondary"
+                    data-icon="checkroom"
+                    >checkroom</span
+                  >
+                </div>
+                <div>
+                  <p class="font-label-sm text-label-sm text-primary uppercase">
+                    Acne Studios
+                  </p>
+                  <p class="text-[14px] text-secondary">Wool Blend Coat</p>
+                </div>
+              </div>
+              <span
+                class="material-symbols-outlined text-secondary cursor-pointer"
+                data-icon="edit"
+                >edit</span
+              >
+            </div>
+            <div
+              class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl border border-outline-variant/10 hover:border-primary/20 transition-all"
+            >
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-12 h-12 bg-surface-container-highest rounded-lg flex items-center justify-center"
+                >
+                  <span
+                    class="material-symbols-outlined text-secondary"
+                    data-icon="shopping_bag"
+                    >shopping_bag</span
+                  >
+                </div>
+                <div>
+                  <p class="font-label-sm text-label-sm text-primary uppercase">
+                    Jil Sander
+                  </p>
+                  <p class="text-[14px] text-secondary">Canvas Tote</p>
+                </div>
+              </div>
+              <span
+                class="material-symbols-outlined text-secondary cursor-pointer"
+                data-icon="edit"
+                >edit</span
+              >
+            </div>
+            <button
+              class="w-full py-3 flex items-center justify-center gap-2 border-2 border-dashed border-outline-variant/50 rounded-xl text-secondary font-label-sm text-label-sm hover:border-primary/30 transition-all"
+            >
+              <span class="material-symbols-outlined" data-icon="add">add</span>
+              ADD ITEM METADATA
+            </button>
+          </div>
+        </section>
+        <!-- Creative Tools Section -->
+        <section class="flex flex-col gap-stack-md">
+          <h3 class="font-title-md text-title-md text-primary">
+            AI Creative Studio
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              class="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low rounded-2xl hover:bg-surface-container transition-colors group"
+            >
+              <span
+                class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform"
+                data-icon="filter_vintage"
+                >filter_vintage</span
+              >
+              <span
+                class="font-label-sm text-[10px] uppercase tracking-widest text-secondary"
+                >Background</span
+              >
+            </button>
+            <button
+              class="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low rounded-2xl hover:bg-surface-container transition-colors group"
+            >
+              <span
+                class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform"
+                data-icon="auto_fix"
+                >auto_fix</span
+              >
+              <span
+                class="font-label-sm text-[10px] uppercase tracking-widest text-secondary"
+                >Style Filter</span
+              >
+            </button>
+          </div>
+        </section>
+        <!-- Visibility Settings -->
+        <section
+          class="p-6 bg-surface-container-low rounded-2xl flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-primary"
+              data-icon="visibility"
+              >visibility</span
+            >
+            <div>
+              <p class="font-label-sm text-label-sm text-primary uppercase">
+                Visibility
+              </p>
+              <p class="text-[12px] text-secondary">
+                Public to Closet Community
+              </p>
+            </div>
+          </div>
+          <!-- Toggle Switch -->
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input checked="" class="sr-only peer" type="checkbox" value="" />
+            <div
+              class="w-11 h-6 bg-secondary-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
+            ></div>
+          </label>
+        </section>
+        <!-- Final Actions -->
+        <section class="mt-auto space-y-3">
+          <button
+            class="w-full bg-primary text-on-primary py-4 rounded-xl font-title-md flex items-center justify-center gap-3 active:scale-95 transition-transform"
+          >
+            <span class="material-symbols-outlined" data-icon="calendar_add_on"
+              >calendar_add_on</span
+            >
+            Save to Calendar &amp; Share Link
+          </button>
+          <button
+            class="w-full bg-transparent text-primary py-4 rounded-xl font-label-sm text-label-sm border border-primary/20 hover:bg-surface-container-low transition-colors"
+          >
+            DOWNLOAD AS IMAGE
+          </button>
+        </section>
+      </aside>
+    </main>
+    <!-- Bottom Navigation Bar (Shell Implementation) -->
+    <nav
+      class="fixed bottom-0 w-full z-50 rounded-t-[32px] bg-surface/80 dark:bg-surface-container/80 backdrop-blur-3xl border-t border-outline-variant/20 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-end px-4 pb-6 pt-2 w-full"
+    >
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform flex-1"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="home">home</span>
+        <span class="font-label-sm text-[10px]">Home</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform flex-1"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="apparel"
+          >apparel</span
+        >
+        <span class="font-label-sm text-[10px]">Fashion</span>
+      </a>
+      <!-- Prominent Add Button -->
+      <a
+        class="flex flex-col items-center justify-center text-on-primary bg-primary w-16 h-16 rounded-full -translate-y-4 shadow-lg active:scale-90 duration-200 transition-transform ring-4 ring-surface"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined text-3xl"
+          data-icon="add"
+          style="font-variation-settings: &quot;wght&quot; 600"
+          >add</span
+        >
+        <span class="font-label-sm text-[10px] hidden">Add</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform flex-1"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="shopping_bag"
+          >shopping_bag</span
+        >
+        <span class="font-label-sm text-[10px]">Shop</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 transition-transform flex-1"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="person">person</span>
+        <span class="font-label-sm text-[10px]">Profile</span>
+      </a>
+    </nav>
+    <script>
+      // Simple Interaction Logic
+      document.querySelectorAll(".active\\:scale-95").forEach((button) => {
+        button.addEventListener("mousedown", () => {
+          button.classList.add("scale-95");
+        });
+        button.addEventListener("mouseup", () => {
+          button.classList.remove("scale-95");
+        });
+      });
+
+      // Add a subtle parallax effect to the magazine card on mouse move
+      const magazineCard = document.querySelector(".group");
+      if (magazineCard) {
+        magazineCard.addEventListener("mousemove", (e) => {
+          const rect = magazineCard.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const deltaX = (x - centerX) / 30;
+          const deltaY = (y - centerY) / 30;
+
+          magazineCard.style.transform = `perspective(1000px) rotateY(${deltaX}deg) rotateX(${-deltaY}deg)`;
+        });
+
+        magazineCard.addEventListener("mouseleave", () => {
+          magazineCard.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg)`;
+        });
+      }
+    </script>
+  </body>
+</html>

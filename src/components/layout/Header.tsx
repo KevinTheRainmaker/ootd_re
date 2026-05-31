@@ -92,7 +92,7 @@ export default function Header() {
   const loading = status === "loading";
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-100 bg-white/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-100/50 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-xl items-center justify-between px-4">
         <Link
           href="/"

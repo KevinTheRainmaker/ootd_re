@@ -22,14 +22,14 @@ const MONTH_NAMES = [
   "12월",
 ];
 
-const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
+const DAY_NAMES = ["S", "M", "T", "W", "T", "F", "S"];
 
 const MOOD_COLORS: Record<Mood, string> = {
-  passion: "bg-red-400",
-  happy: "bg-yellow-400",
-  calm: "bg-blue-400",
-  cozy: "bg-green-400",
-  creative: "bg-purple-400",
+  passion: "bg-[#E57373]",
+  happy: "bg-[#90CAF9]",
+  calm: "bg-[#66BB6A]",
+  cozy: "bg-[#D4E157]",
+  creative: "bg-[#CE93D8]",
 };
 
 function toYM(date: Date) {
@@ -111,146 +111,164 @@ export default function CalendarPage() {
     day === today.getDate();
 
   return (
-    <main className="flex flex-col min-h-screen bg-zinc-50 px-4 py-8 gap-6 max-w-md mx-auto w-full">
-      {/* 월 네비게이션 */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={goPrev}
-          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors text-zinc-600"
-          aria-label="이전 달"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+    <main className="flex flex-col min-h-screen bg-[#fdf8f8] px-4 py-8 gap-6 max-w-md mx-auto w-full">
+      {/* 제목 */}
+      <h1
+        className="text-2xl font-semibold text-[#1c1b1b] leading-8"
+        style={{ fontFamily: "Montserrat, sans-serif" }}
+      >
+        Daily Rituals
+      </h1>
+
+      {/* 캘린더 카드 */}
+      <div className="bg-white rounded-[32px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+        {/* 월 네비게이션 */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={goPrev}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#f1edec] transition-colors text-[#444748]"
+            aria-label="이전 달"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
+            </svg>
+          </button>
 
-        <h1 className="text-base font-semibold text-zinc-900">
-          {current.year}년 {MONTH_NAMES[current.month - 1]}
-        </h1>
+          <p className="text-sm font-semibold text-[#1c1b1b]">
+            {current.year}년 {MONTH_NAMES[current.month - 1]}
+          </p>
 
-        <button
-          onClick={goNext}
-          disabled={isThisMonth}
-          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="다음 달"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+          <button
+            onClick={goNext}
+            disabled={isThisMonth}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#f1edec] transition-colors text-[#444748] disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="다음 달"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5l7.5 7.5-7.5 7.5"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-3 gap-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <OotdCardSkeleton key={i} />
-          ))}
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.25 4.5l7.5 7.5-7.5 7.5"
+              />
+            </svg>
+          </button>
         </div>
-      ) : error ? (
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <p className="text-sm text-zinc-500">{error}</p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => fetchRecords(current.year, current.month)}
-          >
-            다시 시도
-          </Button>
-        </div>
-      ) : (
-        <>
-          {/* 요일 헤더 */}
-          <div className="grid grid-cols-7 gap-1">
-            {DAY_NAMES.map((d) => (
-              <div
-                key={d}
-                className="text-center text-xs text-zinc-400 font-medium py-1"
-              >
-                {d}
-              </div>
+
+        {loading ? (
+          <div className="grid grid-cols-3 gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <OotdCardSkeleton key={i} />
             ))}
           </div>
-
-          {/* 날짜 그리드 */}
-          <div className="grid grid-cols-7 gap-1">
-            {/* 첫 주 빈 칸 */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-
-            {/* 날짜 셀 */}
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
-              const record = ootdByDate[day];
-              return (
-                <div key={day} className="flex flex-col items-center gap-0.5">
-                  {record ? (
-                    <Link
-                      href={`/ootd/${record.id}`}
-                      className="w-9 h-9 rounded-full overflow-hidden relative flex-shrink-0 hover:opacity-80 transition-opacity"
-                    >
-                      <img
-                        src={record.card_image_url ?? record.original_image_url}
-                        alt={`${day}일 OOTD`}
-                        className="w-full h-full object-cover"
-                      />
-                    </Link>
-                  ) : (
-                    <div
-                      className={[
-                        "w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium",
-                        isToday(day)
-                          ? "bg-zinc-900 text-white"
-                          : "text-zinc-700",
-                      ].join(" ")}
-                    >
-                      {day}
-                    </div>
-                  )}
-                  {record?.mood && (
-                    <div
-                      className={`w-2 h-2 rounded-full ${MOOD_COLORS[record.mood]}`}
-                    />
-                  )}
+        ) : error ? (
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <p className="text-sm text-[#444748]">{error}</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fetchRecords(current.year, current.month)}
+            >
+              다시 시도
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* 요일 헤더 */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {DAY_NAMES.map((d, i) => (
+                <div
+                  key={i}
+                  className="text-center text-xs font-semibold text-[#5d5e60] uppercase tracking-widest py-1"
+                >
+                  {d}
                 </div>
-              );
-            })}
-          </div>
-
-          {/* 기록 없을 때 안내 */}
-          {records.length === 0 && (
-            <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <p className="text-sm text-zinc-500">
-                {MONTH_NAMES[current.month - 1]}에 기록된 착장이 없어요.
-              </p>
-              <Button size="sm" onClick={() => router.push("/upload")}>
-                오늘 착장 기록하기
-              </Button>
+              ))}
             </div>
-          )}
-        </>
-      )}
+
+            {/* 날짜 그리드 */}
+            <div className="grid grid-cols-7 gap-1">
+              {/* 첫 주 빈 칸 */}
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <div key={`empty-${i}`} />
+              ))}
+
+              {/* 날짜 셀 */}
+              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(
+                (day) => {
+                  const record = ootdByDate[day];
+                  return (
+                    <div key={day} className="flex flex-col items-center gap-1">
+                      {record ? (
+                        <Link
+                          href={`/ootd/${record.id}`}
+                          className={[
+                            "w-9 h-9 rounded-full overflow-hidden relative flex-shrink-0 hover:opacity-80 transition-opacity",
+                            isToday(day) ? "ring-2 ring-black" : "",
+                          ].join(" ")}
+                        >
+                          <img
+                            src={
+                              record.card_image_url ?? record.original_image_url
+                            }
+                            alt={`${day}일 OOTD`}
+                            className="w-full h-full object-cover"
+                          />
+                        </Link>
+                      ) : (
+                        <div
+                          className={[
+                            "w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium",
+                            isToday(day)
+                              ? "ring-2 ring-black text-[#1c1b1b]"
+                              : "text-[#444748]",
+                          ].join(" ")}
+                        >
+                          {day}
+                        </div>
+                      )}
+                      {record?.mood && (
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full ${MOOD_COLORS[record.mood]}`}
+                        />
+                      )}
+                    </div>
+                  );
+                },
+              )}
+            </div>
+
+            {/* 기록 없을 때 안내 */}
+            {records.length === 0 && (
+              <div className="flex flex-col items-center gap-4 pt-8 text-center">
+                <p className="text-sm text-[#5d5e60]">
+                  {MONTH_NAMES[current.month - 1]}에 기록된 착장이 없어요.
+                </p>
+                <Button size="sm" onClick={() => router.push("/upload")}>
+                  오늘 착장 기록하기
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </main>
   );
 }

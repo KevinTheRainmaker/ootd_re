@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdf8f8;
+  --foreground: #1c1b1b;
 }
 
 @theme inline {
@@ -10,13 +10,39 @@
   --color-foreground: var(--foreground);
   --font-sans: "Noto Sans KR", sans-serif;
   --font-handwriting: "Nanum Pen Script", cursive;
-}
+  --font-display: "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Vogue Logic 색상 */
+  --color-surface: #fdf8f8;
+  --color-surface-dim: #ddd9d8;
+  --color-surface-bright: #fdf8f8;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f7f3f2;
+  --color-surface-container: #f1edec;
+  --color-surface-container-high: #ebe7e6;
+  --color-surface-container-highest: #e5e2e1;
+  --color-on-surface: #1c1b1b;
+  --color-on-surface-variant: #444748;
+  --color-outline: #747878;
+  --color-outline-variant: #c4c7c7;
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+  --color-secondary: #5d5e60;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dfdfe1;
+
+  /* 타이포그래피 */
+  --font-size-display-lg: 48px;
+  --line-height-display-lg: 56px;
+  --font-size-headline-lg: 32px;
+  --line-height-headline-lg: 40px;
+  --font-size-headline-lg-mobile: 24px;
+  --line-height-headline-lg-mobile: 32px;
+  --font-size-title-md: 20px;
+  --line-height-title-md: 28px;
+  --font-size-label-sm: 12px;
+  --line-height-label-sm: 16px;
 }
 
 body {
@@ -27,4 +53,44 @@ body {
 
 .font-handwriting {
   font-family: "Nanum Pen Script", cursive;
+}
+
+.glass-card {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes scan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.scanner-line {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #000000, transparent);
+  position: absolute;
+  width: 100%;
+  z-index: 10;
+  animation: scan 3s linear infinite;
 }
