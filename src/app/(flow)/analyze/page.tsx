@@ -94,7 +94,7 @@ function AnalyzePageInner() {
       const res = await fetch("/api/ootd/generate-card", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, card_type: "basic" }),
       });
 
       if (!res.ok) {

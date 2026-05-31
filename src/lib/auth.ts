@@ -7,6 +7,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      plan: "free" | "pro";
       name?: string | null;
       email?: string | null;
       image?: string | null;
@@ -17,6 +18,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     dbId?: string;
+    plan?: "free" | "pro";
   }
 }
 
@@ -39,12 +41,13 @@ export const authOptions: NextAuthOptions = {
 
         const { data: existing } = await supabaseAdmin
           .from("users")
-          .select("id")
+          .select("id, plan")
           .eq("email", email)
           .single();
 
         if (existing) {
           token.dbId = existing.id;
+          token.plan = (existing.plan as "free" | "pro") ?? "free";
           await supabaseAdmin
             .from("users")
             .update({ name: user.name ?? null, image: user.image ?? null })
@@ -60,6 +63,7 @@ export const authOptions: NextAuthOptions = {
             .select("id")
             .single();
           token.dbId = inserted?.id ?? undefined;
+          token.plan = "free";
         }
       }
       return token;
@@ -69,6 +73,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }: { session: any; token: JWT }) {
       if (session.user && token.dbId) {
         session.user.id = token.dbId;
+        session.user.plan = token.plan ?? "free";
       }
       return session;
     },
