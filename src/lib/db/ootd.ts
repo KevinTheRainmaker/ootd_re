@@ -92,6 +92,53 @@ export async function deleteOotdRecord(
   if (error) throw new Error(error.message);
 }
 
+/**
+ * 무료 사용자의 30일 이전 OOTD 삭제 (Cron용)
+ * 반환: 삭제된 레코드의 이미지 URL 목록 (Storage 삭제에 활용)
+ */
+export async function deleteOldFreeUserRecords(): Promise<{
+  deleted: number;
+  imageUrls: string[];
+}> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+  // 무료 사용자만 대상 (plan = 'free')
+  const { data: freeUsers } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("plan", "free");
+
+  if (!freeUsers || freeUsers.length === 0)
+    return { deleted: 0, imageUrls: [] };
+
+  const userIds = freeUsers.map((u) => u.id);
+
+  // 삭제 대상 레코드 조회 (이미지 URL 수집)
+  const { data: targets } = await supabaseAdmin
+    .from("ootd_records")
+    .select("id, original_image_url, card_image_url")
+    .in("user_id", userIds)
+    .lt("date", cutoffStr);
+
+  if (!targets || targets.length === 0) return { deleted: 0, imageUrls: [] };
+
+  const imageUrls = targets.flatMap(
+    (r) => [r.original_image_url, r.card_image_url].filter(Boolean) as string[],
+  );
+
+  const ids = targets.map((r) => r.id);
+  const { error } = await supabaseAdmin
+    .from("ootd_records")
+    .delete()
+    .in("id", ids);
+
+  if (error) throw new Error(error.message);
+
+  return { deleted: ids.length, imageUrls };
+}
+
 export async function getAllOotdsByUser(
   userId: string,
   limit = 60,

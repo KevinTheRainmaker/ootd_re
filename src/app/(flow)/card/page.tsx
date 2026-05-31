@@ -28,41 +28,17 @@ const MOODS = [
   { value: "creative", color: "bg-purple-400", label: "창의" },
 ] as const;
 
+/** counted: true → 무료 월 5회 / Pro 월 30회 usage 차감 */
 const CARD_TYPES: {
   type: CardType;
   label: string;
   icon: string;
-  desc: string;
-  pro: boolean;
+  counted: boolean;
 }[] = [
-  {
-    type: "basic",
-    label: "기본",
-    icon: "photo_library",
-    desc: "원본 사진 + 아이템 정보",
-    pro: false,
-  },
-  {
-    type: "ai",
-    label: "AI 카드",
-    icon: "auto_awesome",
-    desc: "AI가 손글씨 주석 생성",
-    pro: true,
-  },
-  {
-    type: "remove-bg",
-    label: "배경 제거",
-    icon: "hide_image",
-    desc: "배경 제거 후 새 배경",
-    pro: false,
-  },
-  {
-    type: "style",
-    label: "스타일",
-    icon: "palette",
-    desc: "스타일 필터 적용",
-    pro: true,
-  },
+  { type: "basic", label: "기본", icon: "photo_library", counted: false },
+  { type: "ai", label: "AI 카드", icon: "auto_awesome", counted: true },
+  { type: "remove-bg", label: "배경 제거", icon: "hide_image", counted: true },
+  { type: "style", label: "스타일", icon: "palette", counted: true },
 ];
 
 function CardPageInner() {
@@ -81,9 +57,26 @@ function CardPageInner() {
   const [savedRecordId, setSavedRecordId] = useState<string | null>(null);
   const [shareId, setShareId] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<{
+    current: number;
+    limit: number;
+  } | null>(null);
   const [regenModalOpen, setRegenModalOpen] = useState(false);
-  const [proModalOpen, setProModalOpen] = useState(false);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
+
+  // 사용량 조회
+  useEffect(() => {
+    fetch("/api/usage")
+      .then((r) => r.json())
+      .then((d) =>
+        setUsageInfo({
+          current: d.card_generation_count ?? 0,
+          limit: d.limit ?? 5,
+        }),
+      )
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -99,13 +92,7 @@ function CardPageInner() {
 
   const handleSelectType = useCallback(
     async (type: CardType) => {
-      const typeDef = CARD_TYPES.find((t) => t.type === type);
-      if (typeDef?.pro && !isPro) {
-        setProModalOpen(true);
-        return;
-      }
-      if (type === cardType) return;
-      if (!ootdData) return;
+      if (type === cardType || generating || !ootdData) return;
 
       setCardType(type);
       if (type === "basic") {
@@ -130,13 +117,21 @@ function CardPageInner() {
         });
         if (!res.ok) {
           const err = await res.json();
-          addToast(err.error ?? "카드 생성에 실패했습니다.", "error");
+          if (err.code === "monthly_limit_exceeded") {
+            setLimitModalOpen(true);
+          } else {
+            addToast(err.error ?? "카드 생성에 실패했습니다.", "error");
+          }
           setCardType("basic");
           setCurrentCardUrl(ootdData.original_image_url);
           return;
         }
         const { card_image_url } = await res.json();
         setCurrentCardUrl(card_image_url);
+        // 사용량 갱신
+        setUsageInfo((prev) =>
+          prev ? { ...prev, current: prev.current + 1 } : prev,
+        );
       } catch {
         addToast("네트워크 오류가 발생했습니다.", "error");
         setCardType("basic");
@@ -145,7 +140,7 @@ function CardPageInner() {
         setGenerating(false);
       }
     },
-    [cardType, ootdData, isPro, addToast],
+    [cardType, generating, ootdData, addToast],
   );
 
   const handleDownload = useCallback(async () => {
@@ -184,7 +179,6 @@ function CardPageInner() {
 
       if (!sid) {
         if (!saved) {
-          // 아직 저장 안 됨 → 공개로 저장
           const saveRes = await fetch("/api/ootd/save", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -210,7 +204,6 @@ function CardPageInner() {
           sid = saveData.share_id;
           sessionStorage.removeItem("ootdData");
         } else if (savedRecordId) {
-          // 저장됐지만 비공개 → 공개 전환
           const patchRes = await fetch(`/api/ootd/${savedRecordId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -242,9 +235,8 @@ function CardPageInner() {
         addToast("공유 링크가 복사됐습니다.", "success");
       }
     } catch (e) {
-      if (e instanceof Error && e.name !== "AbortError") {
+      if (e instanceof Error && e.name !== "AbortError")
         addToast("공유에 실패했습니다.", "error");
-      }
     } finally {
       setSharing(false);
     }
@@ -284,6 +276,11 @@ function CardPageInner() {
 
   if (!ootdData) return <CardPreviewSkeleton />;
 
+  const remaining =
+    usageInfo !== null
+      ? Math.max(0, usageInfo.limit - usageInfo.current)
+      : null;
+
   return (
     <main className="flex flex-col items-center min-h-screen bg-[#fdf8f8] px-4 pt-6 pb-28 gap-5">
       {/* 헤더 */}
@@ -304,7 +301,7 @@ function CardPageInner() {
         {generating && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/30 rounded-2xl gap-3">
             <div className="w-8 h-8 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            <p className="text-white text-xs font-medium">AI 카드 생성 중...</p>
+            <p className="text-white text-xs font-medium">카드 생성 중...</p>
           </div>
         )}
         <CardPreview imageUrl={currentCardUrl} />
@@ -313,33 +310,55 @@ function CardPageInner() {
       {/* 카드 스타일 탭 */}
       {!saved && (
         <div className="w-full max-w-sm">
-          <p className="text-[10px] font-semibold text-[#747878] uppercase tracking-widest mb-2">
-            카드 스타일
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-semibold text-[#747878] uppercase tracking-widest">
+              카드 스타일
+            </p>
+            {/* 잔여 횟수 뱃지 */}
+            {!isPro && remaining !== null && (
+              <span
+                className={[
+                  "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                  remaining > 0
+                    ? "bg-[#f1edec] text-[#5d5e60]"
+                    : "bg-[#ffdad6] text-[#93000a]",
+                ].join(" ")}
+              >
+                {remaining > 0
+                  ? `AI 스타일 이번 달 ${remaining}회 남음`
+                  : "이번 달 한도 초과"}
+              </span>
+            )}
+            {isPro && (
+              <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Pro
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-4 gap-2">
             {CARD_TYPES.map((ct) => {
               const isSelected = cardType === ct.type;
-              const locked = ct.pro && !isPro;
+              const isExhausted =
+                ct.counted && !isPro && remaining !== null && remaining <= 0;
               return (
                 <button
                   key={ct.type}
-                  onClick={() => handleSelectType(ct.type)}
+                  onClick={() =>
+                    isExhausted
+                      ? setLimitModalOpen(true)
+                      : handleSelectType(ct.type)
+                  }
                   disabled={generating}
                   className={[
                     "relative flex flex-col items-center gap-1 p-2.5 rounded-[16px] border transition-all",
                     isSelected
                       ? "border-black bg-black text-white"
-                      : "border-[#e5e2e1] bg-white text-[#444748]",
-                    generating ? "opacity-50 cursor-not-allowed" : "",
+                      : isExhausted
+                        ? "border-[#e5e2e1] bg-[#fafafa] opacity-50"
+                        : "border-[#e5e2e1] bg-white text-[#444748]",
+                    generating ? "cursor-not-allowed opacity-50" : "",
                   ].join(" ")}
                 >
-                  {locked && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#1c1b1b] rounded-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-white text-[10px]">
-                        lock
-                      </span>
-                    </span>
-                  )}
                   <span
                     className={[
                       "material-symbols-outlined text-[22px]",
@@ -498,16 +517,16 @@ function CardPageInner() {
         </div>
       </Modal>
 
-      {/* Pro 업그레이드 모달 */}
+      {/* 월 한도 초과 모달 */}
       <Modal
-        open={proModalOpen}
-        onClose={() => setProModalOpen(false)}
+        open={limitModalOpen}
+        onClose={() => setLimitModalOpen(false)}
         title=""
       >
         <div className="flex flex-col items-center gap-4 pt-2">
-          <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-[28px]">
-              auto_awesome
+          <div className="w-14 h-14 bg-[#f1edec] rounded-full flex items-center justify-center">
+            <span className="material-symbols-outlined text-[28px] text-[#5d5e60]">
+              hourglass_empty
             </span>
           </div>
           <div className="text-center">
@@ -515,44 +534,32 @@ function CardPageInner() {
               className="text-xl font-bold text-[#1c1b1b] mb-1"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
-              Pro 기능
+              이번 달 한도 초과
             </h3>
             <p className="text-sm text-[#747878] leading-relaxed">
-              AI 카드 생성, 배경 제거, 스타일 변경은
+              무료 플랜은 AI·배경제거·스타일 카드를
               <br />
-              Pro 구독자에게만 제공됩니다.
+              <strong className="text-[#1c1b1b]">월 5회</strong>까지 사용할 수
+              있어요.
+              <br />
+              다음 달에 다시 사용하거나 Pro로 업그레이드하세요.
             </p>
           </div>
-          <ul className="w-full space-y-2">
-            {["AI 손글씨 카드 생성", "배경 제거 및 교체", "스타일 필터"].map(
-              (f) => (
-                <li
-                  key={f}
-                  className="flex items-center gap-2 text-sm text-[#444748]"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-[#66BB6A]">
-                    check_circle
-                  </span>
-                  {f}
-                </li>
-              ),
-            )}
-          </ul>
           <Button
             size="lg"
             className="w-full rounded-full"
             onClick={() => {
-              setProModalOpen(false);
+              setLimitModalOpen(false);
               router.push("/profile");
             }}
           >
             Pro 플랜 보기 — ₩4,900/월
           </Button>
           <button
-            onClick={() => setProModalOpen(false)}
+            onClick={() => setLimitModalOpen(false)}
             className="text-xs text-[#747878]"
           >
-            나중에
+            나중에 (기본 카드 사용)
           </button>
         </div>
       </Modal>
