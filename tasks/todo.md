@@ -250,7 +250,7 @@
 - [x] 4. 원본 소유권·요청 상한과 원자적 생성 사용량 예약을 적용한다.
 - [x] 5. 011 원격 마이그레이션과 롤백 smoke를 통과한다.
 - [x] 6. 전체 테스트·타입·린트·빌드와 보안 재검토를 통과한다.
-- [ ] 7. `main`에 푸시하고 운영 배포를 검증한다.
+- [x] 7. `main`에 푸시하고 운영 배포를 검증한다.
 
 ### Review
 
@@ -262,3 +262,4 @@
 - Supabase에서 테이블/RPC/권한을 확인했고, 예약→busy→재선점→stale token 거절→환불→완료 캐시→만료 회수 smoke를 전체 롤백으로 통과했다.
 - 보안 재검토 결과 merge-blocking CRITICAL/WARNING 0건이다.
 - RED: 신규 모듈 부재 테스트 실패를 확인했다. GREEN: 43 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
+- 배포: `main`의 `6cf5b62`를 Vercel production에 반영했다. 누락된 `CRON_SECRET`을 Production 환경에 설정해 재배포했고, deployment Ready, 운영 홈 200, 카드 API 비로그인 401, cleanup cron 무인증 401을 확인했다.
