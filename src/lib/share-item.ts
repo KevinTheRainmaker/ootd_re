@@ -22,6 +22,8 @@ export type ShareItemSource = Pick<
   | "product_name"
   | "image_url"
   | "crop_image_url"
+  | "extraction_status"
+  | "extraction_error_code"
 >;
 
 export interface ShareItemViewModel {
@@ -29,7 +31,18 @@ export interface ShareItemViewModel {
   category: ItemCategory;
   categoryLabel: string;
   imageUrl: string | null;
+  imagePending: boolean;
   details: Array<{ label: string; value: string }>;
+}
+
+const SHARE_POLLING_DELAYS_MS = [5_000, 10_000, 20_000, 30_000, 30_000] as const;
+
+export function getSharePollingDelay(
+  attempt: number,
+  isHidden: boolean,
+): number | null {
+  if (isHidden || !Number.isInteger(attempt) || attempt < 0) return null;
+  return SHARE_POLLING_DELAYS_MS[attempt] ?? null;
 }
 
 function clean(value: string | null | undefined): string | null {
@@ -63,6 +76,12 @@ export function toShareItemViewModel(
     category: item.category,
     categoryLabel,
     imageUrl: clean(item.image_url),
+    imagePending:
+      !clean(item.image_url) &&
+      (item.extraction_status === "queued" ||
+        item.extraction_status === "processing" ||
+        (item.extraction_status === "failed" &&
+          item.extraction_error_code === "quality_mismatch")),
     details,
   };
 }

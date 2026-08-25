@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "@/components/ui/Modal";
-import type { ShareItemViewModel } from "@/lib/share-item";
+import {
+  getSharePollingDelay,
+  type ShareItemViewModel,
+} from "@/lib/share-item";
 
 export type ShareCardItem = ShareItemViewModel & { id: string };
 
@@ -44,11 +48,35 @@ export default function ShareFlipCard({
   frontImageUrl,
   items,
 }: ShareFlipCardProps) {
+  const router = useRouter();
   const [isFlipped, setIsFlipped] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ShareCardItem | null>(null);
+  const [pollAttempt, setPollAttempt] = useState(0);
+  const [isPageHidden, setIsPageHidden] = useState(
+    () => typeof document !== "undefined" && document.hidden,
+  );
   const frontButtonRef = useRef<HTMLButtonElement>(null);
   const backHeadingRef = useRef<HTMLHeadingElement>(null);
   const hasFlippedRef = useRef(false);
+  const hasPendingImages = items.some((item) => item.imagePending);
+
+  useEffect(() => {
+    const updateVisibility = () => setIsPageHidden(document.hidden);
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!hasPendingImages) return;
+    const delay = getSharePollingDelay(pollAttempt, isPageHidden);
+    if (delay === null) return;
+    const timer = window.setTimeout(() => {
+      setPollAttempt((attempt) => attempt + 1);
+      router.refresh();
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [hasPendingImages, isPageHidden, pollAttempt, router]);
 
   const changeFlip = (next: boolean) => {
     hasFlippedRef.current = true;

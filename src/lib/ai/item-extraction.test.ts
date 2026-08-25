@@ -182,8 +182,8 @@ describe("item extraction geometry", () => {
         {
           same_source_item: true,
           detected_category: "shoes",
-          contains_person: false,
-          contains_multiple_items: false,
+          cutout_contains_person: false,
+          cutout_contains_multiple_items: false,
           reason: "same white sneakers",
         },
         "shoes",
@@ -195,8 +195,8 @@ describe("item extraction geometry", () => {
         {
           same_source_item: false,
           detected_category: "bottom",
-          contains_person: false,
-          contains_multiple_items: false,
+          cutout_contains_person: false,
+          cutout_contains_multiple_items: false,
           reason: "generated shorts instead of shoes",
         },
         "shoes",

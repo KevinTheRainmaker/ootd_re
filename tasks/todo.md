@@ -291,3 +291,28 @@
 - RED: `share-item` 모듈 부재로 테스트 컴파일 실패를 확인했다. GREEN: 46 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
 - 로컬 공개 레코드로 앞↔뒤 전환, 4개 아이템 이름, 모달 열기·닫기, 빈 이미지 placeholder, 포커스 이동, 내부 경로 비노출을 확인했다.
 - 배포: `main`의 `57bdfae`를 Vercel production에 반영했다. 운영 공유 레코드에서 앞↔뒤 전환, 4개 아이템 이름, 상세 dialog, 이미지 placeholder를 확인했고 브라우저 오류와 내부 path/bbox 노출은 없었다.
+
+## 개별 이미지 백그라운드 생성 장애 (2026-08-25)
+
+### 성공 기준
+
+- [x] 저장된 OOTD의 queued 개별 이미지 작업이 백그라운드 consumer에서 실행된다.
+- [ ] 성공한 작업의 `ootd_items.image_path`가 자동으로 반영되고 화면에서 이미지가 보인다.
+- [x] 실패한 작업은 원인 코드와 재시도 가능한 상태를 남긴다.
+
+### 계획
+
+- [x] 1. 운영 DB의 extraction job·OOTD 연결 상태와 오류를 확인한다.
+- [x] 2. 분석→저장→Queue→consumer→완료 RPC 흐름과 배포 설정을 추적한다.
+- [x] 3. 단일 원인 가설을 최소 재현으로 검증한다.
+- [x] 4. 실패 테스트를 추가하고 근본 원인을 수정한다.
+- [ ] 5. 전체 검증 후 `main` 배포와 운영 이미지 생성을 확인한다.
+
+### Review
+
+- Production Queue는 저장 성공 약 0.5초 뒤 linked 작업을 전부 consumer로 전달했고, 최근 13개 작업도 모두 attempts=1이었다. 문제는 Queue 유실이 아니라 품질 검증의 terminal 실패였다.
+- 두 이미지를 받는 검증 응답의 `contains_person`이 원본 착용자와 생성 cutout 중 대상을 구분하지 못해, 실제로 원본과 일치한다는 reason을 낸 10개 결과도 `quality_mismatch`로 폐기했다.
+- 검증 필드를 `cutout_contains_person`·`cutout_contains_multiple_items`로 변경하고 프롬프트에서 두 필드는 두 번째 생성 이미지만 뜻하도록 고정했다. 새 실패는 `quality_mismatch_v2`로 분리했다.
+- 012 RPC는 v2 실패를 terminal로 처리해 at-least-once 중복 delivery가 비용을 재발생시키지 않으며, 기존 v1 false-negative만 linked·attempts<3 범위에서 재처리한다. 원격 migration과 전체 ROLLBACK smoke를 통과했다.
+- 공유 페이지는 pending 결과를 5/10/20/30/30초 간격으로 갱신하고 숨김 탭에서는 중지한다. raw job 상태와 private crop은 공개 DTO에 포함하지 않는다.
+- RED: 새 scoped validator 필드, legacy retry selector, polling presenter가 없는 실패를 각각 확인했다. GREEN: 50 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.

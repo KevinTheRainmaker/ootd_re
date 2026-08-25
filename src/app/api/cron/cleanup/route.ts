@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { send } from "@vercel/queue";
+import {
+  runWithConcurrency,
+  selectLegacyQualityMismatchRetries,
+} from "@/lib/ai/background-extraction";
+import { listLegacyQualityMismatchJobs } from "@/lib/db/item-extraction";
 import {
   deleteAbandonedItemExtractions,
   deleteOldFreeUserRecords,
 } from "@/lib/db/ootd";
 import { supabaseAdmin } from "@/lib/supabase";
 import { refundExpiredCardGenerations } from "@/lib/db/card-generation";
+
+export const maxDuration = 300;
 
 /**
  * Vercel Cron Job — 매일 새벽 3시 실행
@@ -33,6 +41,24 @@ export async function GET(req: NextRequest) {
     const { deleted, imageUrls, itemImagePaths } =
       await deleteOldFreeUserRecords();
     itemImagePaths.push(...(await deleteAbandonedItemExtractions()));
+
+    const retryableExtractions = selectLegacyQualityMismatchRetries(
+      await listLegacyQualityMismatchJobs(),
+    );
+    await runWithConcurrency(retryableExtractions, 4, async (task) => {
+      await send(
+        "ootd-item-extraction",
+        {
+          userId: task.userId,
+          extractionId: task.extractionId,
+          cropImagePath: task.cropImagePath,
+        },
+        {
+          idempotencyKey: `validation-v2-${task.extractionId}`,
+          retentionSeconds: 7 * 24 * 60 * 60,
+        },
+      );
+    });
 
     // Supabase Storage 이미지 삭제 (버킷별로 경로 추출)
     let storageDeleted = 0;
@@ -73,6 +99,7 @@ export async function GET(req: NextRequest) {
       deleted_records: deleted,
       deleted_files: storageDeleted,
       refunded_card_generations: refundedCardGenerations,
+      redispatched_item_extractions: retryableExtractions.length,
       ran_at: new Date().toISOString(),
     });
   } catch (err: unknown) {

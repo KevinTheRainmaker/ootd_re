@@ -77,7 +77,7 @@ export async function getOotdByShareId(
 ): Promise<OotdRecord | null> {
   const { data, error } = await supabaseAdmin
     .from("ootd_records")
-    .select("*, items:ootd_items(*)")
+    .select("*, items:ootd_items(*, extraction_job:item_extraction_jobs(status,error_code))")
     .eq("share_id", shareId)
     .eq("is_public", true)
     .single();

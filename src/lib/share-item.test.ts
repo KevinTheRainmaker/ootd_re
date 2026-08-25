@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { toShareItemViewModel } from "./share-item";
+import { getSharePollingDelay, toShareItemViewModel } from "./share-item";
 
 describe("toShareItemViewModel", () => {
   it("제품명과 공개 cutout을 카드 표시 정보로 만든다", () => {
@@ -65,5 +65,54 @@ describe("toShareItemViewModel", () => {
     });
 
     assert.equal(view.imageUrl, null);
+  });
+
+  it("진행 중이거나 구 검증 실패를 재처리하는 동안 새 데이터를 요청한다", () => {
+    const base = {
+      category: "top" as const,
+      color: null,
+      style_description: null,
+      brand: null,
+      product_name: "티셔츠",
+      image_url: null,
+      crop_image_url: null,
+    };
+
+    assert.equal(
+      toShareItemViewModel({ ...base, extraction_status: "processing" })
+        .imagePending,
+      true,
+    );
+    assert.equal(
+      toShareItemViewModel({
+        ...base,
+        extraction_status: "failed",
+        extraction_error_code: "quality_mismatch",
+      }).imagePending,
+      true,
+    );
+    assert.equal(
+      toShareItemViewModel({
+        ...base,
+        extraction_status: "failed",
+        extraction_error_code: "quality_mismatch_v2",
+      }).imagePending,
+      false,
+    );
+  });
+});
+
+describe("getSharePollingDelay", () => {
+  it("지수형 간격으로 제한된 횟수만 공개 페이지를 갱신한다", () => {
+    assert.deepEqual(
+      [0, 1, 2, 3, 4, 5].map((attempt) =>
+        getSharePollingDelay(attempt, false),
+      ),
+      [5_000, 10_000, 20_000, 30_000, 30_000, null],
+    );
+  });
+
+  it("숨김 탭에서는 자동 갱신을 멈춘다", () => {
+    assert.equal(getSharePollingDelay(0, true), null);
   });
 });

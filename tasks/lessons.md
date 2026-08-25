@@ -67,3 +67,5 @@
 31. **관리용 cron 인증은 환경변수 누락 시 fail-closed여야 한다** — secret이 있을 때만 검사하는 조건은 배포 설정 누락 하나로 service-role 작업을 공개한다. secret 누락은 503, 불일치는 401로 실제 작업 전에 차단할 것.
 
 32. **공개 인터랙션에는 도메인 행 전체가 아니라 화면 전용 DTO만 전달한다** — Server Component가 안전한 조회를 했더라도 Client Component에 원본 행을 넘기면 private path·bbox·작업 상태가 Flight payload에 직렬화될 수 있다. 필요한 표시 필드와 단기 공개 URL만 매핑하고, 숨은 3D face는 `aria-hidden`뿐 아니라 `inert`와 포커스 이동까지 함께 적용할 것.
+
+33. **다중 이미지 검증 응답의 모든 필드는 판정 대상을 이름에 명시한다** — 원본 착용 사진과 생성 cutout을 함께 보는 검증기에서 `contains_person`처럼 대상이 모호한 필드는 원본 사람을 결과 오염으로 오판할 수 있다. `cutout_contains_person`처럼 입력 역할을 필드명·프롬프트·파서에서 일치시키고, 백그라운드 결과를 기다리는 화면은 작업 상태를 polling/refresh해 완료 결과를 반영할 것.

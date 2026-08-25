@@ -463,8 +463,8 @@ export function parseCutoutQualityResult(
   const accepted =
     result.same_source_item === true &&
     result.detected_category === expectedCategory &&
-    result.contains_person === false &&
-    result.contains_multiple_items === false;
+    result.cutout_contains_person === false &&
+    result.cutout_contains_multiple_items === false;
   return { accepted, reason };
 }
 
@@ -493,7 +493,7 @@ export async function validateGarmentCutout(
         content: [
           {
             type: "text",
-            text: `Expected category: ${expectedCategory}. The first image is the source photo and the second is the generated cutout. Return {"same_source_item":boolean,"detected_category":"top|bottom|outer|shoes|bag|accessory|hat|glasses|watch|other","contains_person":boolean,"contains_multiple_items":boolean,"reason":"short explanation"}. Mark same_source_item false when the expected item is absent from the source or the cutout changes category, color, silhouette, or identity.`,
+            text: `Expected category: ${expectedCategory}. The first image is the source photo and the second is the generated cutout. Return {"same_source_item":boolean,"detected_category":"top|bottom|outer|shoes|bag|accessory|hat|glasses|watch|other","cutout_contains_person":boolean,"cutout_contains_multiple_items":boolean,"reason":"short explanation"}. The two cutout_* fields refer ONLY to the second image. Ignore the wearer and other outfit items in the first source image when setting those fields. Mark same_source_item false when the expected item is absent from the source or the cutout changes category, color, silhouette, or identity.`,
           },
           {
             type: "image_url",

@@ -97,3 +97,21 @@ export async function failItemExtraction(
   });
   if (error) console.error("[item-image] 실패 상태 저장 실패", error);
 }
+
+export async function listLegacyQualityMismatchJobs(
+  limit = 100,
+): Promise<Array<Record<string, unknown>>> {
+  const { data, error } = await supabaseAdmin
+    .from("item_extraction_jobs")
+    .select(
+      "user_id, extraction_id, crop_image_path, status, attempts, error_code, ootd_items!inner(id)",
+    )
+    .eq("status", "failed")
+    .eq("error_code", "quality_mismatch")
+    .gt("attempts", 0)
+    .lt("attempts", 3)
+    .order("updated_at", { ascending: true })
+    .limit(Math.min(Math.max(limit, 1), 100));
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Array<Record<string, unknown>>;
+}

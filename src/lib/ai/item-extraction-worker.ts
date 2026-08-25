@@ -93,10 +93,10 @@ export async function processItemExtraction(
         userId,
         extractionId,
         claimToken,
-        "quality_mismatch",
+        "quality_mismatch_v2",
         quality.reason,
       );
-      return { status: "failed", errorCode: "quality_mismatch" };
+      return { status: "failed", errorCode: "quality_mismatch_v2" };
     }
 
     const { path } = await uploadItemCutout(

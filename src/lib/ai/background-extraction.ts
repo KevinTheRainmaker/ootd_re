@@ -3,6 +3,10 @@ export interface PendingExtractionTask {
   cropImagePath: string;
 }
 
+export interface RetryableExtractionTask extends PendingExtractionTask {
+  userId: string;
+}
+
 export function selectPendingExtractions(
   items: Array<Record<string, unknown>>,
 ): PendingExtractionTask[] {
@@ -17,6 +21,35 @@ export function selectPendingExtractions(
     const imagePath = typeof item.image_path === "string" ? item.image_path : null;
     if (extractionId && cropImagePath && !imagePath) {
       unique.set(extractionId, { extractionId, cropImagePath });
+    }
+  }
+  return [...unique.values()];
+}
+
+export function selectLegacyQualityMismatchRetries(
+  jobs: Array<Record<string, unknown>>,
+): RetryableExtractionTask[] {
+  const unique = new Map<string, RetryableExtractionTask>();
+  for (const job of jobs) {
+    const userId = typeof job.user_id === "string" ? job.user_id : null;
+    const extractionId =
+      typeof job.extraction_id === "string" ? job.extraction_id : null;
+    const cropImagePath =
+      typeof job.crop_image_path === "string" ? job.crop_image_path : null;
+    const attempts = Number(job.attempts);
+    const linkedItems = Array.isArray(job.ootd_items) ? job.ootd_items : [];
+    if (
+      userId &&
+      extractionId &&
+      cropImagePath &&
+      job.status === "failed" &&
+      job.error_code === "quality_mismatch" &&
+      Number.isInteger(attempts) &&
+      attempts > 0 &&
+      attempts < 3 &&
+      linkedItems.length > 0
+    ) {
+      unique.set(extractionId, { userId, extractionId, cropImagePath });
     }
   }
   return [...unique.values()];

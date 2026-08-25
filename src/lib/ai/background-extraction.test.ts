@@ -10,6 +10,13 @@ interface BackgroundModule {
     concurrency: number,
     worker: (value: T) => Promise<void>,
   ) => Promise<void>;
+  selectLegacyQualityMismatchRetries?: (
+    jobs: Array<Record<string, unknown>>,
+  ) => Array<{
+    userId: string;
+    extractionId: string;
+    cropImagePath: string;
+  }>;
 }
 
 let background: BackgroundModule = {};
@@ -53,5 +60,50 @@ describe("background item extraction", () => {
       /1개 작업/,
     );
     assert.deepEqual([...visited].sort(), [1, 2, 3]);
+  });
+
+  it("구 검증기의 false-negative 작업만 한 번 재전송한다", () => {
+    assert.equal(
+      typeof background.selectLegacyQualityMismatchRetries,
+      "function",
+    );
+    assert.deepEqual(
+      background.selectLegacyQualityMismatchRetries!([
+        {
+          user_id: "user-1",
+          extraction_id: "job-1",
+          crop_image_path: "user-1/job-1/crop.png",
+          status: "failed",
+          attempts: 1,
+          error_code: "quality_mismatch",
+          ootd_items: [{ id: "item-1" }],
+        },
+        {
+          user_id: "user-1",
+          extraction_id: "job-v2",
+          crop_image_path: "user-1/job-v2/crop.png",
+          status: "failed",
+          attempts: 1,
+          error_code: "quality_mismatch_v2",
+          ootd_items: [{ id: "item-2" }],
+        },
+        {
+          user_id: "user-1",
+          extraction_id: "job-unlinked",
+          crop_image_path: "user-1/job-unlinked/crop.png",
+          status: "failed",
+          attempts: 1,
+          error_code: "quality_mismatch",
+          ootd_items: [],
+        },
+      ]),
+      [
+        {
+          userId: "user-1",
+          extractionId: "job-1",
+          cropImagePath: "user-1/job-1/crop.png",
+        },
+      ],
+    );
   });
 });
