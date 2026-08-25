@@ -233,3 +233,32 @@
 - 010 migration은 pending 저장과 complete fanout을 지원하며, save/complete 경합은 정렬된 job row lock으로 직렬화한다. 원격 적용 후 source 제약·함수 권한·private bucket 9개 항목과 rollback smoke를 통과했다.
 - 검증: 32 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS, security review merge blocker 0.
 - 배포: `main`의 `848cfb5`를 Vercel production에 반영했고 배포 status success, 운영 홈 HTTP 200, 인증 보호 API 비로그인 401을 확인했다.
+
+## AI 카드·스타일 탭 통합 (2026-08-25)
+
+### 성공 기준
+
+- [x] 카드 화면에는 `기본`과 하나의 `AI 카드` 선택지만 보인다.
+- [x] 기존 `style` 요청은 동일한 AI 카드로 호환 처리된다.
+- [x] 알 수 없는 카드 타입은 생성·사용량 차감 전에 거절된다.
+
+### 계획
+
+- [x] 1. 두 탭의 실제 생성 경로와 차이를 확인한다.
+- [x] 2. 카드 타입 정규화와 UI 중복 방지 테스트를 RED로 확인한다.
+- [x] 3. UI·API·공유 타입을 단일 AI 카드로 통합한다.
+- [x] 4. 원본 소유권·요청 상한과 원자적 생성 사용량 예약을 적용한다.
+- [x] 5. 011 원격 마이그레이션과 롤백 smoke를 통과한다.
+- [x] 6. 전체 테스트·타입·린트·빌드와 보안 재검토를 통과한다.
+- [ ] 7. `main`에 푸시하고 운영 배포를 검증한다.
+
+### Review
+
+- 조사 결과 `ai`와 `style`은 동일한 API와 `generateCard()`를 사용하며 생성 결과 차이가 없었다.
+- UI 옵션은 `기본`과 `AI 카드`로 축소하고 2열로 정리했다. legacy `style`은 API 경계에서 `ai`로 변환한다.
+- 기존에는 임의 `card_type`이 생성 경로에 진입하면서 사용량 차감을 피할 수 있었으나, 이제 `invalid_card_type` 400으로 거절한다.
+- AI 카드 요청은 64KB streaming 상한과 canonical 분류·문자열 검증을 거치며, 사용자 소유 원본만 예약 성공 뒤에 제한적으로 다운로드·디코딩한다.
+- 011 RPC는 월 사용량을 모델 호출 전에 원자 예약하고 request ID·fingerprint·claim token으로 중복 생성, 응답 유실, lease 재선점을 안전하게 처리한다. 확정 실패는 즉시 환불하고 만료 예약은 cleanup cron이 회수한다.
+- Supabase에서 테이블/RPC/권한을 확인했고, 예약→busy→재선점→stale token 거절→환불→완료 캐시→만료 회수 smoke를 전체 롤백으로 통과했다.
+- 보안 재검토 결과 merge-blocking CRITICAL/WARNING 0건이다.
+- RED: 신규 모듈 부재 테스트 실패를 확인했다. GREEN: 43 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.

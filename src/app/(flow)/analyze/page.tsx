@@ -154,6 +154,7 @@ function AnalyzePageInner() {
           original_image_url: imageUrl,
           card_image_url,
           save_request_id: crypto.randomUUID(),
+          card_request_id: crypto.randomUUID(),
         }),
       );
       router.push("/card");

@@ -4,6 +4,7 @@ import {
   deleteOldFreeUserRecords,
 } from "@/lib/db/ootd";
 import { supabaseAdmin } from "@/lib/supabase";
+import { refundExpiredCardGenerations } from "@/lib/db/card-generation";
 
 /**
  * Vercel Cron Job — 매일 새벽 3시 실행
@@ -15,14 +16,20 @@ import { supabaseAdmin } from "@/lib/supabase";
 export async function GET(req: NextRequest) {
   // Vercel Cron 요청 인증 (CRON_SECRET 환경변수로 보호)
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!secret) {
+    console.error("[cleanup] CRON_SECRET이 설정되지 않았습니다.");
+    return NextResponse.json(
+      { error: "Cron authentication is not configured" },
+      { status: 503 },
+    );
+  }
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
+    const refundedCardGenerations = await refundExpiredCardGenerations();
     const { deleted, imageUrls, itemImagePaths } =
       await deleteOldFreeUserRecords();
     itemImagePaths.push(...(await deleteAbandonedItemExtractions()));
@@ -65,6 +72,7 @@ export async function GET(req: NextRequest) {
       ok: true,
       deleted_records: deleted,
       deleted_files: storageDeleted,
+      refunded_card_generations: refundedCardGenerations,
       ran_at: new Date().toISOString(),
     });
   } catch (err: unknown) {

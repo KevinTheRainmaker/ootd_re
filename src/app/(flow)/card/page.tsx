@@ -11,6 +11,7 @@ import Modal from "@/components/ui/Modal";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import type { AnalyzeResponse, CardType } from "@/types/api";
 import type { Mood } from "@/types";
+import { CARD_TYPE_OPTIONS } from "@/lib/card-type";
 
 interface OotdSessionData {
   items: AnalyzeResponse["items"];
@@ -19,6 +20,7 @@ interface OotdSessionData {
   original_image_url: string;
   card_image_url: string;
   save_request_id: string;
+  card_request_id: string;
 }
 
 function getLocalDate(): string {
@@ -34,18 +36,6 @@ const MOODS = [
   { value: "cozy", color: "bg-green-400", label: "편안" },
   { value: "creative", color: "bg-purple-400", label: "창의" },
 ] as const;
-
-/** counted: true → 무료 월 5회 / Pro 월 30회 usage 차감 */
-const CARD_TYPES: {
-  type: CardType;
-  label: string;
-  icon: string;
-  counted: boolean;
-}[] = [
-  { type: "basic", label: "기본", icon: "photo_library", counted: false },
-  { type: "ai", label: "AI 카드", icon: "auto_awesome", counted: true },
-  { type: "style", label: "스타일", icon: "palette", counted: true },
-];
 
 function CardPageInner() {
   const router = useRouter();
@@ -96,6 +86,7 @@ function CardPageInner() {
           ? {
               ...parsed,
               save_request_id: parsed.save_request_id || crypto.randomUUID(),
+              card_request_id: parsed.card_request_id || crypto.randomUUID(),
             }
           : null;
         setOotdData(data);
@@ -125,13 +116,19 @@ function CardPageInner() {
         return;
       }
 
-      // AI/Style: usage 체크 후 생성
+      // AI 카드: usage 체크 후 생성
       setGenerating(true);
+      const rotateRequestId = () => {
+        const updated = { ...ootdData, card_request_id: crypto.randomUUID() };
+        setOotdData(updated);
+        sessionStorage.setItem("ootdData", JSON.stringify(updated));
+      };
       try {
         const res = await fetch("/api/ootd/generate-card", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            request_id: ootdData.card_request_id,
             card_type: type,
             ootd_data: {
               original_image_url: ootdData.original_image_url,
@@ -143,6 +140,14 @@ function CardPageInner() {
         });
         if (!res.ok) {
           const err = await res.json();
+          const retryWithSameRequest = [
+            "card_generation_busy",
+            "card_generation_stale",
+            "card_generation_finalize_failed",
+            "card_generation_reservation_uncertain",
+            "card_generation_refund_uncertain",
+          ].includes(err.code);
+          if (!retryWithSameRequest) rotateRequestId();
           if (err.code === "monthly_limit_exceeded") {
             setLimitModalOpen(true);
           } else {
@@ -154,6 +159,7 @@ function CardPageInner() {
         }
         const { card_image_url } = await res.json();
         setCurrentCardUrl(card_image_url);
+        rotateRequestId();
         setUsageInfo((prev) =>
           prev ? { ...prev, current: prev.current + 1 } : prev,
         );
@@ -341,7 +347,7 @@ function CardPageInner() {
                 ].join(" ")}
               >
                 {remaining > 0
-                  ? `AI 스타일 이번 달 ${remaining}회 남음`
+                  ? `AI 카드 이번 달 ${remaining}회 남음`
                   : "이번 달 한도 초과"}
               </span>
             )}
@@ -351,8 +357,8 @@ function CardPageInner() {
               </span>
             )}
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {CARD_TYPES.map((ct) => {
+          <div className="grid grid-cols-2 gap-2">
+            {CARD_TYPE_OPTIONS.map((ct) => {
               const isSelected = cardType === ct.type;
               const isExhausted =
                 ct.counted && !isPro && remaining !== null && remaining <= 0;
@@ -553,7 +559,7 @@ function CardPageInner() {
               이번 달 한도 초과
             </h3>
             <p className="text-sm text-[#747878] leading-relaxed">
-              무료 플랜은 AI·배경제거·스타일 카드를
+              무료 플랜은 AI 카드를
               <br />
               <strong className="text-[#1c1b1b]">월 5회</strong>까지 사용할 수
               있어요.

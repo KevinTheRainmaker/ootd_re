@@ -33,10 +33,12 @@ export interface AnalyzeResponse {
   hashtags: string[];
 }
 
-export type CardType = "basic" | "ai" | "style";
+export type CardType = "basic" | "ai";
+export type CardTypeInput = CardType | "style";
 
 export interface GenerateCardRequest {
-  card_type?: CardType;
+  request_id?: string;
+  card_type?: CardTypeInput;
   ootd_data: {
     original_image_url: string;
     items: AnalyzeResponse["items"];

@@ -1,19 +1,24 @@
 import OpenAI, { toFile } from "openai";
 import { ImageResponse } from "@vercel/og";
 import type { ReactElement } from "react";
-import type { GenerateCardRequest, GenerateCardResponse } from "@/types/api";
+import type { GenerateCardResponse } from "@/types/api";
+import type { CardGenerationPayload } from "@/lib/card-generation";
 import { uploadCardImage } from "@/lib/storage";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  timeout: 120_000,
+  maxRetries: 0,
+});
 
 async function planA(
-  request: GenerateCardRequest["ootd_data"],
+  request: CardGenerationPayload,
   userId: string,
+  sourceImage: Buffer,
 ): Promise<GenerateCardResponse> {
-  const res = await fetch(request.original_image_url);
-  if (!res.ok) throw new Error("원본 이미지 fetch 실패");
-  const buffer = Buffer.from(await res.arrayBuffer());
-  const imageFile = await toFile(buffer, "fashion.jpg", { type: "image/jpeg" });
+  const imageFile = await toFile(sourceImage, "fashion.png", {
+    type: "image/png",
+  });
 
   const CATEGORY_LABEL: Record<string, string> = {
     top: "상의",
@@ -95,9 +100,11 @@ ${itemAnnotations}
 }
 
 async function planB(
-  request: GenerateCardRequest["ootd_data"],
+  request: CardGenerationPayload,
   userId: string,
+  sourceImage: Buffer,
 ): Promise<GenerateCardResponse> {
+  const sourceDataUrl = `data:image/png;base64,${sourceImage.toString("base64")}`;
   const itemLines = request.items.slice(0, 5).map((item) => ({
     label: item.style_description ?? item.category,
     color: item.color ?? "",
@@ -133,7 +140,7 @@ async function planB(
           {
             type: "img",
             props: {
-              src: request.original_image_url,
+              src: sourceDataUrl,
               style: {
                 width: "100%",
                 height: 480,
@@ -185,15 +192,16 @@ async function planB(
 }
 
 export async function generateCard(
-  request: GenerateCardRequest["ootd_data"],
+  request: CardGenerationPayload,
   userId: string,
+  sourceImage: Buffer,
 ): Promise<GenerateCardResponse> {
   if (process.env.OPENAI_API_KEY) {
     try {
-      return await planA(request, userId);
+      return await planA(request, userId, sourceImage);
     } catch {
       // intentional: fall through to Plan B
     }
   }
-  return planB(request, userId);
+  return planB(request, userId, sourceImage);
 }

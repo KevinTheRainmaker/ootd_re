@@ -34,27 +34,3 @@ export async function checkCardLimit(userId: string): Promise<UsageLimitInfo> {
 
   return { current, limit, allowed: current < limit, plan };
 }
-
-export async function incrementCardCount(userId: string): Promise<void> {
-  const yearMonth = getMonthKey();
-
-  const { data: existing } = await supabaseAdmin
-    .from("usage_logs")
-    .select("id, card_generation_count")
-    .eq("user_id", userId)
-    .eq("year_month", yearMonth)
-    .single();
-
-  if (existing) {
-    await supabaseAdmin
-      .from("usage_logs")
-      .update({ card_generation_count: existing.card_generation_count + 1 })
-      .eq("id", existing.id);
-  } else {
-    await supabaseAdmin.from("usage_logs").insert({
-      user_id: userId,
-      year_month: yearMonth,
-      card_generation_count: 1,
-    });
-  }
-}
