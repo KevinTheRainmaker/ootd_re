@@ -280,7 +280,7 @@
 - [x] 3. 아이템 표시명·상세정보 presenter 테스트를 RED로 확인한다.
 - [x] 4. 3D flip 카드와 아이템 상세 모달을 구현한다.
 - [x] 5. 접근성·반응형·보안과 전체 빌드를 검증한다.
-- [ ] 6. `main`에 푸시하고 운영 공유 페이지에서 확인한다.
+- [x] 6. `main`에 푸시하고 운영 공유 페이지에서 확인한다.
 
 ### Review
 
@@ -290,3 +290,4 @@
 - 숨은 face는 `inert` 처리하고 flip 뒤 보이는 면으로 포커스를 이동한다. reduced-motion 사용자는 전환 애니메이션 없이 이용할 수 있다.
 - RED: `share-item` 모듈 부재로 테스트 컴파일 실패를 확인했다. GREEN: 46 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
 - 로컬 공개 레코드로 앞↔뒤 전환, 4개 아이템 이름, 모달 열기·닫기, 빈 이미지 placeholder, 포커스 이동, 내부 경로 비노출을 확인했다.
+- 배포: `main`의 `57bdfae`를 Vercel production에 반영했다. 운영 공유 레코드에서 앞↔뒤 전환, 4개 아이템 이름, 상세 dialog, 이미지 placeholder를 확인했고 브라우저 오류와 내부 path/bbox 노출은 없었다.
