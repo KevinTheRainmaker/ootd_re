@@ -2,6 +2,11 @@ import { type NextAuthOptions, getServerSession } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import GoogleProvider from "next-auth/providers/google";
 import { supabaseAdmin } from "@/lib/supabase";
+import {
+  canLinkGoogleAccount,
+  hydrateAuthToken,
+  type AuthUserRepository,
+} from "@/lib/auth-token";
 
 declare module "next-auth" {
   interface Session {
@@ -22,6 +27,58 @@ declare module "next-auth/jwt" {
   }
 }
 
+const authUserRepository: AuthUserRepository = {
+  async findByEmail(email) {
+    const { data, error } = await supabaseAdmin
+      .from("users")
+      .select("id, plan")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`auth_user_lookup_failed: ${error.message}`);
+    }
+    if (!data) return null;
+    return {
+      id: data.id,
+      plan: data.plan === "pro" ? "pro" : "free",
+    };
+  },
+
+  async updateProfile(id, profile) {
+    const { error } = await supabaseAdmin
+      .from("users")
+      .update(profile)
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`auth_user_update_failed: ${error.message}`);
+    }
+  },
+
+  async createUser(user) {
+    const { data, error } = await supabaseAdmin
+      .from("users")
+      .insert(user)
+      .select("id, plan")
+      .single();
+
+    if (error || !data) {
+      throw new Error(
+        `auth_user_create_failed: ${error?.message ?? "missing user data"}`,
+      );
+    }
+    return {
+      id: data.id,
+      plan: data.plan === "pro" ? "pro" : "free",
+    };
+  },
+
+  reportProfileUpdateError() {
+    console.warn("[auth] best-effort profile update failed");
+  },
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -30,43 +87,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      return !!user.email;
+    async signIn({ user, account, profile }) {
+      return canLinkGoogleAccount(user.email, account?.provider, profile);
     },
 
     async jwt({ token, user }) {
-      // 첫 로그인 시에만 실행 (user가 있을 때)
-      if (user?.email) {
-        const email = user.email;
-
-        const { data: existing } = await supabaseAdmin
-          .from("users")
-          .select("id, plan")
-          .eq("email", email)
-          .single();
-
-        if (existing) {
-          token.dbId = existing.id;
-          token.plan = (existing.plan as "free" | "pro") ?? "free";
-          await supabaseAdmin
-            .from("users")
-            .update({ name: user.name ?? null, image: user.image ?? null })
-            .eq("id", existing.id);
-        } else {
-          const { data: inserted } = await supabaseAdmin
-            .from("users")
-            .insert({
-              email,
-              name: user.name ?? null,
-              image: user.image ?? null,
-            })
-            .select("id")
-            .single();
-          token.dbId = inserted?.id ?? undefined;
-          token.plan = "free";
-        }
-      }
-      return token;
+      return hydrateAuthToken(token, user, authUserRepository);
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

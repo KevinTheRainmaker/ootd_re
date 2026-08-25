@@ -12,6 +12,8 @@
   "include": [
     "src/lib/ootd-classification.ts",
     "src/lib/ootd-classification.test.ts",
+    "src/lib/auth-token.ts",
+    "src/lib/auth-token.test.ts",
     "src/types/index.ts",
     "src/types/api.ts"
   ]

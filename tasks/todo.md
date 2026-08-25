@@ -110,3 +110,35 @@
 - 23개 후보 파일의 비밀키 패턴 검사는 0건이었고, `.env.local`은 Git ignore 상태임을 확인했다.
 - 검증: 6 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
 - 배포 브랜치: `codex/wardrobe-save-improvements`.
+
+## 캘린더 API 401 수정 (2026-08-25)
+
+### 재현 및 성공 기준
+
+- [x] 배포 API의 인증 실패와 세션/JWT 데이터 흐름을 재현·추적한다.
+- [x] `dbId`가 없는 기존 JWT를 이메일만으로 재연결하지 않고 재로그인 대상으로 처리한다.
+- [x] Supabase 사용자 조회·생성·갱신 오류를 로그인 성공으로 삼키지 않는다.
+- [x] 캘린더 API 인증 경계와 전체 빌드를 검증한다.
+
+### 구현 계획
+
+- [x] 1. `dbId`가 없는 JWT 복구 회귀 테스트를 먼저 실패시킨다.
+- [x] 2. 인증 토큰 동기화 로직을 분리하고 NextAuth JWT 콜백에 연결한다.
+- [x] 3. 단위 테스트·타입체크·린트·빌드 및 인증 경계를 확인한다.
+- [x] 4. 수정 내용을 커밋하고 `main`에 fast-forward 병합·푸시한다.
+
+### Root cause
+
+- 미들웨어는 JWT 존재만 검사하지만 API는 `session.user.id`를 요구한다.
+- JWT 콜백은 최초 로그인(`user` 존재) 때만 Supabase `users.id`를 채우며, 조회·삽입 오류도 검사하지 않는다.
+- Supabase 대시보드에서 프로젝트 `OTNADRI`가 paused 상태임을 확인했으며, 프로젝트 호스트는 공용 DNS에서도 `NXDOMAIN`이었다.
+- 프로젝트 중단 중 로그인한 세션은 Supabase 사용자 조회에 실패했지만 기존 코드가 오류를 삼켜 `dbId` 없는 JWT를 발급했고, 페이지 접근에는 성공하면서 모든 `/api/ootd/*` 요청에서 401을 반복했다.
+
+### 현재 검증
+
+- 회귀 테스트는 수정 전 실패하고 수정 후 통과했다.
+- 단위 테스트 11개, TypeScript, ESLint 0 warnings, Next.js production build가 통과했다.
+- 검증된 Google 이메일만 계정 연결에 사용하고, `dbId` 없는 JWT는 보호 경로에서 미인증 처리한다.
+- 실제 JWT→캘린더 API E2E는 paused 프로젝트 재개 확인 후 수행한다.
+- 장기 보안 과제: 이메일 대신 `(provider, providerAccountId/sub)` 고유 키로 계정을 연결하는 별도 마이그레이션이 필요하다.
+- 배포 대상: `main` 브랜치.

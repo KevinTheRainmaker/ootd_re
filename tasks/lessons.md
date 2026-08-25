@@ -37,3 +37,7 @@
 16. **Supabase SQL Editor의 Monaco 입력은 실행 전 전체 교체를 확인한다** — 자동 입력이 기존 SQL 뒤에 추가될 수 있으므로 에디터를 클릭한 뒤 전체 선택·교체하고, 실행 전 시작/끝 구문을 다시 확인할 것.
 
 17. **PostgREST RPC 검증은 실제 함수 인자명으로 수행한다** — 함수가 존재해도 payload 키가 시그니처와 다르면 PGRST202/404가 난다. DB 내부 호출과 함께 실제 API payload로 service_role 도달 및 공개 역할 차단을 각각 검증할 것.
+
+18. **인증 401은 세션 쿠키와 애플리케이션 사용자 ID를 분리해 추적한다** — 미들웨어가 JWT 존재만 확인하고 API가 별도 `dbId`를 요구하면 페이지는 열리면서 API만 401이 될 수 있다. JWT 콜백은 `dbId` 누락을 복구하고 DB 오류를 절대 로그인 성공으로 삼키지 말 것.
+
+19. **Supabase Free 프로젝트 pause를 API 키 만료로 오인하지 않는다** — 프로젝트가 pause되면 `<project-ref>.supabase.co`가 `NXDOMAIN`이 될 수 있다. 키 교체 전에 대시보드 프로젝트 상태와 DNS를 함께 확인할 것.
