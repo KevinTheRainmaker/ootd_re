@@ -2,7 +2,6 @@
 
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-import Image from "next/image";
 
 const PLANS = [
   {

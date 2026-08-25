@@ -224,6 +224,7 @@ export default function CalendarPage() {
                             isToday(day) ? "ring-2 ring-black" : "",
                           ].join(" ")}
                         >
+                          {/* eslint-disable-next-line @next/next/no-img-element -- 사용자 Supabase 이미지는 런타임 URL이다. */}
                           <img
                             src={
                               record.card_image_url ?? record.original_image_url

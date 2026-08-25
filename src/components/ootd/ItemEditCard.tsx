@@ -1,35 +1,43 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { ITEM_CATEGORIES } from "@/types";
 import type { ItemCategory } from "@/types";
 import type { AnalyzeResponse } from "@/types/api";
 import ItemBadge from "./ItemBadge";
 
 type EditableItem = AnalyzeResponse["items"][number];
 
-const CATEGORY_OPTIONS: { value: ItemCategory; label: string }[] = [
-  { value: "top", label: "상의" },
-  { value: "bottom", label: "하의" },
-  { value: "outer", label: "아우터" },
-  { value: "shoes", label: "신발" },
-  { value: "bag", label: "가방" },
-  { value: "accessory", label: "액세서리" },
-  { value: "hat", label: "모자" },
-  { value: "glasses", label: "안경" },
-  { value: "watch", label: "시계" },
-  { value: "other", label: "기타" },
-];
+const CATEGORY_LABELS: Record<ItemCategory, string> = {
+  top: "상의",
+  bottom: "하의",
+  outer: "아우터",
+  shoes: "신발",
+  bag: "가방",
+  accessory: "액세서리",
+  hat: "모자",
+  glasses: "안경",
+  watch: "시계",
+  other: "기타",
+};
+
+const CATEGORY_OPTIONS = ITEM_CATEGORIES.map((value) => ({
+  value,
+  label: CATEGORY_LABELS[value],
+}));
 
 interface ItemEditCardProps {
   item: EditableItem;
   index: number;
   onChange: (index: number, updated: EditableItem) => void;
+  onDelete: (index: number) => void;
 }
 
 export default function ItemEditCard({
   item,
   index,
   onChange,
+  onDelete,
 }: ItemEditCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<EditableItem>(item);
@@ -146,12 +154,21 @@ export default function ItemEditCard({
 
         <div className="flex gap-2 pt-1">
           <button
+            type="button"
+            onClick={() => onDelete(index)}
+            className="h-9 rounded-full px-4 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            삭제
+          </button>
+          <button
+            type="button"
             onClick={handleCancel}
             className="flex-1 h-9 rounded-full border border-zinc-200 text-sm text-zinc-600 hover:bg-zinc-50 transition-colors"
           >
             취소
           </button>
           <button
+            type="button"
             onClick={handleSave}
             className="flex-1 h-9 rounded-full bg-zinc-900 text-sm text-white hover:bg-zinc-700 transition-colors"
           >
@@ -164,6 +181,7 @@ export default function ItemEditCard({
 
   return (
     <button
+      type="button"
       onClick={handleEdit}
       className="w-full text-left rounded-2xl border border-zinc-200 bg-white p-4 flex flex-col gap-2 hover:border-zinc-400 hover:shadow-sm transition-all group"
       aria-label={`${item.category} 아이템 편집`}

@@ -37,6 +37,7 @@ export default function MyOotdPage() {
   }, [router]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load는 비동기 fetch 완료 후 상태를 갱신한다.
     load();
   }, [load]);
 

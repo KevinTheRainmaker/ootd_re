@@ -114,6 +114,7 @@ export default function WeatherWidget() {
 
   useEffect(() => {
     if (!navigator.geolocation) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 브라우저 기능 부재를 초기 외부 상태로 동기화한다.
       setState("no-permission");
       return;
     }

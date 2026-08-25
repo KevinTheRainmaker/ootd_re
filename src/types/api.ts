@@ -33,6 +33,7 @@ export interface GenerateCardResponse {
 }
 
 export interface SaveOotdRequest {
+  client_request_id: string;
   original_image_url: string;
   card_image_url: string;
   items: AnalyzeResponse["items"];
@@ -40,7 +41,7 @@ export interface SaveOotdRequest {
   hashtags: string[];
   is_public: boolean;
   memo?: string;
-  date?: string;
+  date: string;
   mood?: Mood;
   weatherSnapshot?: WeatherSnapshot | null;
 }

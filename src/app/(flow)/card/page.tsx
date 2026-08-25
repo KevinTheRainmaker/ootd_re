@@ -18,6 +18,13 @@ interface OotdSessionData {
   hashtags: string[];
   original_image_url: string;
   card_image_url: string;
+  save_request_id: string;
+}
+
+function getLocalDate(): string {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
 }
 
 const MOODS = [
@@ -78,15 +85,33 @@ function CardPageInner() {
   }, []);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("ootdData");
-      const data = raw ? (JSON.parse(raw) as OotdSessionData) : null;
-      setOotdData(data);
-      if (data) setCurrentCardUrl(data.card_image_url);
-      if (!data) router.replace("/upload");
-    } catch {
-      router.replace("/upload");
-    }
+    let cancelled = false;
+
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      try {
+        const raw = sessionStorage.getItem("ootdData");
+        const parsed = raw ? (JSON.parse(raw) as OotdSessionData) : null;
+        const data = parsed
+          ? {
+              ...parsed,
+              save_request_id: parsed.save_request_id || crypto.randomUUID(),
+            }
+          : null;
+        setOotdData(data);
+        if (data) {
+          setCurrentCardUrl(data.card_image_url);
+          sessionStorage.setItem("ootdData", JSON.stringify(data));
+        }
+        if (!data) router.replace("/upload");
+      } catch {
+        router.replace("/upload");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const handleSelectType = useCallback(
@@ -159,17 +184,6 @@ function CardPageInner() {
     }
   }, [currentCardUrl, addToast]);
 
-  const handleCopyLink = useCallback(async () => {
-    if (!shareId) return;
-    const url = `${location.origin}/share/${shareId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      addToast("링크가 복사됐습니다.", "success");
-    } catch {
-      addToast("링크 복사에 실패했습니다.", "error");
-    }
-  }, [shareId, addToast]);
-
   /** 공유 링크 생성 + Web Share / 클립보드 복사 */
   const handleShare = useCallback(async () => {
     if (!ootdData) return;
@@ -184,13 +198,14 @@ function CardPageInner() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               original_image_url: ootdData.original_image_url,
+              client_request_id: ootdData.save_request_id,
               card_image_url: currentCardUrl,
               items: ootdData.items,
               style_summary: ootdData.summary,
               hashtags: ootdData.hashtags,
               is_public: true,
               mood,
-              date: new Date().toISOString().slice(0, 10),
+              date: getLocalDate(),
             }),
           });
           if (!saveRes.ok) {
@@ -251,13 +266,14 @@ function CardPageInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           original_image_url: ootdData.original_image_url,
+          client_request_id: ootdData.save_request_id,
           card_image_url: currentCardUrl,
           items: ootdData.items,
           style_summary: ootdData.summary,
           hashtags: ootdData.hashtags,
           is_public: isPublic,
           mood,
-          date: new Date().toISOString().slice(0, 10),
+          date: getLocalDate(),
         }),
       });
       if (!res.ok) throw new Error();

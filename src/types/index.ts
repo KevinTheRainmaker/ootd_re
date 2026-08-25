@@ -10,17 +10,20 @@ export interface User {
   updated_at: string;
 }
 
-export type ItemCategory =
-  | "top"
-  | "bottom"
-  | "outer"
-  | "shoes"
-  | "bag"
-  | "accessory"
-  | "hat"
-  | "glasses"
-  | "watch"
-  | "other";
+export const ITEM_CATEGORIES = [
+  "top",
+  "bottom",
+  "outer",
+  "shoes",
+  "bag",
+  "accessory",
+  "hat",
+  "glasses",
+  "watch",
+  "other",
+] as const;
+
+export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
 export interface OotdItem {
   id: string;
@@ -34,7 +37,9 @@ export interface OotdItem {
   created_at: string;
 }
 
-export type Mood = "passion" | "happy" | "calm" | "cozy" | "creative";
+export const MOODS = ["passion", "happy", "calm", "cozy", "creative"] as const;
+
+export type Mood = (typeof MOODS)[number];
 
 export interface WeatherSnapshot {
   temp: number;
@@ -46,6 +51,8 @@ export interface WeatherSnapshot {
 export interface OotdRecord {
   id: string;
   user_id: string;
+  client_request_id?: string | null;
+  request_fingerprint?: string | null;
   date: string;
   original_image_url: string;
   card_image_url: string | null;

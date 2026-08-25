@@ -1,6 +1,48 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { OotdRecord, OotdItem } from "@/types";
 
+type CreateOotdWithItemsInput = Omit<
+  OotdRecord,
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "items"
+  | "client_request_id"
+  | "request_fingerprint"
+> & {
+  client_request_id: string;
+  request_fingerprint: string;
+  items: Omit<OotdItem, "id" | "ootd_id" | "created_at">[];
+};
+
+export async function createOotdWithItems(
+  data: CreateOotdWithItemsInput,
+): Promise<OotdRecord> {
+  const { items, ...record } = data;
+  const { data: saved, error } = await supabaseAdmin
+    .rpc("create_ootd_with_items", {
+      p_user_id: record.user_id,
+      p_client_request_id: data.client_request_id,
+      p_request_fingerprint: data.request_fingerprint,
+      p_date: record.date,
+      p_original_image_url: record.original_image_url,
+      p_card_image_url: record.card_image_url,
+      p_style_summary: record.style_summary,
+      p_hashtags: record.hashtags,
+      p_is_public: record.is_public,
+      p_share_id: record.share_id,
+      p_memo: record.memo,
+      p_plan_used: record.plan_used,
+      p_mood: record.mood,
+      p_weather_snapshot: record.weather_snapshot,
+      p_items: items,
+    })
+    .single();
+
+  if (error) throw new Error(error.message);
+  return saved as OotdRecord;
+}
+
 export async function createOotdRecord(
   data: Omit<OotdRecord, "id" | "created_at" | "updated_at" | "items">,
 ): Promise<OotdRecord> {

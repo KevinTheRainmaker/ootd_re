@@ -65,6 +65,7 @@ export default function HomeCalendar() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchRecords는 비동기 fetch 완료 후 상태를 갱신한다.
     fetchRecords(current.year, current.month);
   }, [current, fetchRecords]);
 

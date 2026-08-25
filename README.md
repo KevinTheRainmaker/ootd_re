@@ -45,8 +45,12 @@ ANTHROPIC_API_KEY=                      # Vision 모델 결정 후 필요 시 �
 # 1단계: 테이블 + 인덱스 + 트리거 생성
 supabase/migrations/001_initial.sql
 
-# 2단계: RLS 정책 적용
+# 2~6단계: RLS, 제약조건, 기능 컬럼, 원자 저장 RPC 적용
 supabase/migrations/002_rls.sql
+supabase/migrations/003_constraints.sql
+supabase/migrations/004_product_name.sql
+supabase/migrations/005_mood_weather.sql
+supabase/migrations/006_atomic_ootd_save.sql
 ```
 
 Supabase CLI를 사용하는 경우:

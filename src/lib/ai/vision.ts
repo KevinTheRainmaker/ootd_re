@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { parseAnalyzeResponse } from "@/lib/ootd-classification";
 import type { AnalyzeResponse } from "@/types/api";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -59,7 +60,7 @@ export async function analyzeOotdImage(
         throw Object.assign(new Error("not_fashion"), { code: "not_fashion" });
       }
 
-      return parsed as AnalyzeResponse;
+      return parseAnalyzeResponse(parsed);
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
       if (e.code === "not_fashion") throw err;

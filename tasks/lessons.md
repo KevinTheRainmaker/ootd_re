@@ -25,3 +25,15 @@
 10. **Sprint 0 Critical Gate 실효** — gpt-image-1 API PoC를 Sprint 0에서 검증한 덕분에 Plan A/B 방향을 조기 확정. 이 없었으면 Week 2에서 블로킹 발생.
 
 11. **베조스(QA) 페어 리뷰 효과** — Kakao OAuth BUG, S12 카드UI 목 코드, global-error.tsx, page.tsx 하드코딩 등 구현팀이 놓친 이슈 9건을 별도 리뷰로 잡아냄.
+
+12. **부모/자식 저장은 애플리케이션의 연속 insert로 원자화되지 않는다** — OOTD와 분류 아이템은 Postgres RPC 한 트랜잭션으로 저장하고, 클라이언트 요청 ID와 payload fingerprint를 함께 비교해 재시도 중복과 다른 payload의 키 재사용을 모두 막을 것.
+
+13. **이미지 URL은 스킴 검사만으로 부족하다** — 공개 화면에 다시 렌더링할 URL은 Supabase origin, 버킷, 사용자 소유 경로까지 검증해 외부 추적 이미지와 타 사용자 객체 참조를 차단할 것.
+
+14. **본문 크기 제한은 파싱 후 검사하지 않는다** — `req.json()`/`req.text()` 전체 적재 전에 스트림 청크 누적 크기를 검사하고 상한 초과 시 reader를 즉시 취소할 것.
+
+15. **테스트 러너 추가 전 lockfile 정합성을 확인한다** — 단순 `npm install`도 package.json에 없는 기존 lock 의존성을 정리할 수 있다. 이 저장소처럼 lock과 manifest가 어긋난 경우에는 내장 Node 테스트+별도 tsc 출력처럼 의존성 없는 방법을 우선 검토할 것.
+
+16. **Supabase SQL Editor의 Monaco 입력은 실행 전 전체 교체를 확인한다** — 자동 입력이 기존 SQL 뒤에 추가될 수 있으므로 에디터를 클릭한 뒤 전체 선택·교체하고, 실행 전 시작/끝 구문을 다시 확인할 것.
+
+17. **PostgREST RPC 검증은 실제 함수 인자명으로 수행한다** — 함수가 존재해도 payload 키가 시그니처와 다르면 PGRST202/404가 난다. DB 내부 호출과 함께 실제 API payload로 service_role 도달 및 공개 역할 차단을 각각 검증할 것.

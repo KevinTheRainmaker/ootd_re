@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "isolatedModules": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "node_modules/.cache/ootd-tests",
+    "rootDir": "src"
+  },
+  "include": [
+    "src/lib/ootd-classification.ts",
+    "src/lib/ootd-classification.test.ts",
+    "src/types/index.ts",
+    "src/types/api.ts"
+  ]
+}

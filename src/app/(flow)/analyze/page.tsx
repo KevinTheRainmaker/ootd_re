@@ -77,8 +77,37 @@ function AnalyzePageInner() {
     [],
   );
 
+  const handleItemDelete = useCallback((index: number) => {
+    setItems((prev) =>
+      prev
+        .filter((_, itemIndex) => itemIndex !== index)
+        .map((item, itemIndex) => ({ ...item, order_idx: itemIndex })),
+    );
+  }, []);
+
+  const handleItemAdd = useCallback(() => {
+    setItems((prev) => {
+      if (prev.length >= 8) return prev;
+      return [
+        ...prev,
+        {
+          category: "other",
+          color: null,
+          style_description: null,
+          brand: null,
+          product_name: null,
+          order_idx: prev.length,
+        },
+      ];
+    });
+  }, []);
+
   const handleGenerateCard = async () => {
     if (!imageUrl || !result) return;
+    if (items.length === 0) {
+      addToast("저장할 아이템을 하나 이상 추가해주세요.", "error");
+      return;
+    }
     setGenerating(true);
 
     const payload: GenerateCardRequest = {
@@ -116,6 +145,7 @@ function AnalyzePageInner() {
           hashtags: result.hashtags,
           original_image_url: imageUrl,
           card_image_url,
+          save_request_id: crypto.randomUUID(),
         }),
       );
       router.push("/card");
@@ -237,8 +267,17 @@ function AnalyzePageInner() {
             item={item}
             index={idx}
             onChange={handleItemChange}
+            onDelete={handleItemDelete}
           />
         ))}
+        <button
+          type="button"
+          onClick={handleItemAdd}
+          disabled={items.length >= 8}
+          className="w-full rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-4 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          + 누락된 아이템 추가 {items.length >= 8 ? "(최대 8개)" : ""}
+        </button>
       </section>
 
       {/* CTA */}

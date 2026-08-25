@@ -1,8 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { nanoid } from "nanoid";
 import { getAuthSession } from "@/lib/auth";
-import { createOotdRecord, createOotdItems } from "@/lib/db/ootd";
+import { createOotdWithItems } from "@/lib/db/ootd";
+import {
+  OotdValidationError,
+  assertOwnedStorageImageUrl,
+  parseSaveOotdRequest,
+} from "@/lib/ootd-classification";
 import type { SaveOotdRequest, SaveOotdResponse, ApiError } from "@/types/api";
+
+const MAX_REQUEST_BYTES = 64 * 1024;
+
+class RequestTooLargeError extends Error {}
+
+async function readLimitedBody(req: NextRequest): Promise<string> {
+  const contentLength = Number(req.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
+    throw new RequestTooLargeError();
+  }
+
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let body = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_REQUEST_BYTES) {
+      await reader.cancel();
+      throw new RequestTooLargeError();
+    }
+    body += decoder.decode(value, { stream: true });
+  }
+
+  return body + decoder.decode();
+}
 
 export async function POST(
   req: NextRequest,
@@ -14,30 +50,74 @@ export async function POST(
 
   let body: SaveOotdRequest;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json(
-      { error: "잘못된 요청 형식입니다." },
-      { status: 400 },
-    );
-  }
+    const rawBody = await readLimitedBody(req);
+    body = parseSaveOotdRequest(JSON.parse(rawBody));
 
-  if (!body.original_image_url || !body.card_image_url) {
+    const storageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!storageUrl) throw new Error("storage_not_configured");
+    assertOwnedStorageImageUrl(
+      body.original_image_url,
+      session.user.id,
+      ["originals"],
+      storageUrl,
+    );
+    assertOwnedStorageImageUrl(
+      body.card_image_url,
+      session.user.id,
+      ["originals", "cards"],
+      storageUrl,
+    );
+  } catch (error) {
+    if (error instanceof RequestTooLargeError) {
+      return NextResponse.json(
+        { error: "요청 본문이 너무 큽니다." },
+        { status: 413 },
+      );
+    }
+    if (error instanceof Error && error.message === "storage_not_configured") {
+      return NextResponse.json(
+        { error: "저장소 설정을 확인할 수 없습니다." },
+        { status: 500 },
+      );
+    }
     return NextResponse.json(
-      { error: "original_image_url과 card_image_url이 필요합니다." },
+      {
+        error:
+          error instanceof OotdValidationError
+            ? error.message
+            : "잘못된 요청 형식입니다.",
+      },
       { status: 400 },
     );
   }
 
   try {
     const shareId = body.is_public ? nanoid(8) : null;
+    const requestFingerprint = createHash("sha256")
+      .update(
+        JSON.stringify({
+          original_image_url: body.original_image_url,
+          card_image_url: body.card_image_url,
+          items: body.items,
+          style_summary: body.style_summary,
+          hashtags: body.hashtags,
+          is_public: body.is_public,
+          memo: body.memo ?? null,
+          date: body.date,
+          mood: body.mood,
+          weatherSnapshot: body.weatherSnapshot,
+        }),
+      )
+      .digest("hex");
 
-    const record = await createOotdRecord({
+    const record = await createOotdWithItems({
       user_id: session.user.id,
-      date: body.date ?? new Date().toISOString().slice(0, 10),
+      client_request_id: body.client_request_id,
+      request_fingerprint: requestFingerprint,
+      date: body.date,
       original_image_url: body.original_image_url,
       card_image_url: body.card_image_url,
-      style_summary: body.style_summary,
+      style_summary: body.style_summary || null,
       hashtags: body.hashtags,
       is_public: body.is_public,
       share_id: shareId,
@@ -45,21 +125,8 @@ export async function POST(
       plan_used: null,
       mood: body.mood ?? "happy",
       weather_snapshot: body.weatherSnapshot ?? null,
+      items: body.items,
     });
-
-    if (body.items.length > 0) {
-      await createOotdItems(
-        body.items.map((item, idx) => ({
-          ootd_id: record.id,
-          category: item.category,
-          color: item.color ?? null,
-          style_description: item.style_description ?? null,
-          brand: item.brand ?? null,
-          product_name: item.product_name ?? null,
-          order_idx: item.order_idx ?? idx,
-        })),
-      );
-    }
 
     return NextResponse.json(
       { id: record.id, share_id: record.share_id },
@@ -68,10 +135,19 @@ export async function POST(
   } catch (err: unknown) {
     const e = err as { message?: string; code?: string; details?: string };
     console.error("[save] 저장 실패:", err);
+    if (e.message?.includes("idempotency_conflict")) {
+      return NextResponse.json(
+        {
+          error: "같은 저장 요청 ID가 다른 내용에 사용되었습니다.",
+          code: "idempotency_conflict",
+        },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       {
-        error: e.message ?? "저장 실패",
-        details: e.details ?? e.code ?? null,
+        error: "저장 중 오류가 발생했습니다.",
+        code: "save_failed",
       },
       { status: 500 },
     );
