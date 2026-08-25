@@ -221,7 +221,7 @@
 - [x] 3. 저장 후 비동기 추출 트리거와 상태 조회를 구현한다.
 - [x] 4. 감지·생성 품질 가드와 crop fallback을 구현한다.
 - [x] 5. 마이그레이션·단위·DB smoke·보안 리뷰를 통과한다.
-- [ ] 6. `main`에 푸시하고 운영 배포를 검증한다.
+- [x] 6. `main`에 푸시하고 운영 배포를 검증한다.
 
 ### Root cause / Review
 
@@ -232,3 +232,4 @@
 - Vision 파생 자유 문자열은 downstream AI 프롬프트에서 제거했고, VR·AR 헤드셋·헤드폰·스포츠 보호 장비를 hat/accessory로 분류하지 않도록 감지 규칙을 강화했다.
 - 010 migration은 pending 저장과 complete fanout을 지원하며, save/complete 경합은 정렬된 job row lock으로 직렬화한다. 원격 적용 후 source 제약·함수 권한·private bucket 9개 항목과 rollback smoke를 통과했다.
 - 검증: 32 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS, security review merge blocker 0.
+- 배포: `main`의 `848cfb5`를 Vercel production에 반영했고 배포 status success, 운영 홈 HTTP 200, 인증 보호 API 비로그인 401을 확인했다.
