@@ -11,7 +11,13 @@ export interface AnalyzeRequest {
 
 export type OotdItemInput = Omit<
   OotdItem,
-  "id" | "ootd_id" | "created_at" | "image_url" | "crop_image_url"
+  | "id"
+  | "ootd_id"
+  | "created_at"
+  | "image_url"
+  | "crop_image_url"
+  | "extraction_status"
+  | "extraction_error_code"
 >;
 
 export type AnalyzedOotdItem = OotdItemInput & {

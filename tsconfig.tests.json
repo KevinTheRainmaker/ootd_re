@@ -18,6 +18,8 @@
     "src/lib/ai/vision-prompt.test.ts",
     "src/lib/ai/item-extraction.test.ts",
     "src/lib/ai/item-extraction.ts",
+    "src/lib/ai/background-extraction.test.ts",
+    "src/lib/ai/background-extraction.ts",
     "src/types/index.ts",
     "src/types/api.ts"
   ]

@@ -2,11 +2,13 @@ import { supabaseAdmin } from "@/lib/supabase";
 import type { BoundingBox, ItemCategory } from "@/types";
 
 export interface ItemExtractionClaim {
-  disposition: "claimed" | "busy" | "completed";
+  disposition: "claimed" | "busy" | "completed" | "failed";
   image_path: string | null;
   claim_token: string | null;
   category: ItemCategory;
   color_hex: string | null;
+  source_image_url: string | null;
+  error_code: string | null;
 }
 
 export async function enqueueItemExtraction(
@@ -17,6 +19,7 @@ export async function enqueueItemExtraction(
   boundingBox: BoundingBox,
   category: ItemCategory,
   colorHex: string | null,
+  sourceImageUrl: string,
 ): Promise<void> {
   const { error } = await supabaseAdmin.from("item_extraction_jobs").insert({
     user_id: userId,
@@ -27,6 +30,7 @@ export async function enqueueItemExtraction(
     bounding_box: boundingBox,
     category,
     color_hex: colorHex,
+    source_image_url: sourceImageUrl,
     status: "queued",
     attempts: 0,
   });

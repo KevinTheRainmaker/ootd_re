@@ -40,3 +40,11 @@ test("각 의류의 0~1000 정규화 bounding box를 요구한다", () => {
   assert.match(visionPromptModule.VISION_PROMPT!, /0부터 1000/);
   assert.match(visionPromptModule.VISION_PROMPT!, /의류 전체/);
 });
+
+test("VR·AR 헤드셋과 스포츠 장비를 모자로 오인하지 않도록 제외한다", () => {
+  assert.equal(typeof visionPromptModule.VISION_PROMPT, "string");
+  assert.match(visionPromptModule.VISION_PROMPT!, /VR|AR/);
+  assert.match(visionPromptModule.VISION_PROMPT!, /헤드셋/);
+  assert.match(visionPromptModule.VISION_PROMPT!, /스포츠 장비/);
+  assert.match(visionPromptModule.VISION_PROMPT!, /모자.*포함하지/);
+});

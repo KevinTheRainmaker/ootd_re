@@ -256,9 +256,9 @@ export function assertOwnedItemImagePair(
   userId: string,
 ): void {
   if (!extractionJobId && !imagePath && !cropImagePath) return;
-  if (!extractionJobId || !imagePath || !cropImagePath) {
+  if (!extractionJobId || !cropImagePath) {
     throw new OotdValidationError(
-      "아이템의 추출 작업, crop, cutout 이미지가 모두 필요합니다.",
+      "분석된 아이템에는 추출 작업과 crop 이미지가 필요합니다.",
     );
   }
   if (!UUID_PATTERN.test(userId)) {
@@ -273,10 +273,11 @@ export function assertOwnedItemImagePair(
     !cropMatch ||
     cropMatch[1].toLowerCase() !== extractionJobId.toLowerCase() ||
     cropMatch[2] !== "crop" ||
-    !new RegExp(
-      `^${userId}/${cropMatch[1]}/claims/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cutout\\.png$`,
-      "i",
-    ).test(imagePath)
+    (imagePath !== null &&
+      !new RegExp(
+        `^${userId}/${cropMatch[1]}/claims/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cutout\\.png$`,
+        "i",
+      ).test(imagePath))
   ) {
     throw new OotdValidationError(
       "현재 사용자의 일치하는 crop과 cutout 경로만 저장할 수 있습니다.",

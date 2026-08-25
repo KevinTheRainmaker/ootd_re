@@ -21,9 +21,9 @@ export async function GET(
   }
 
   const { id } = await params;
-  const record = await getOotdRecord(id);
+  const record = await getOotdRecord(id, session.user.id);
 
-  if (!record || record.user_id !== session.user.id) {
+  if (!record) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -59,7 +59,7 @@ export async function PATCH(
     if (typeof body.is_public !== "undefined") {
       updates.is_public = body.is_public;
       if (body.is_public) {
-        const current = await getOotdRecord(id);
+        const current = await getOotdRecord(id, session.user.id);
         updates.share_id = current?.share_id ?? nanoid(8);
       } else {
         updates.share_id = null;

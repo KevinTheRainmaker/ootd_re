@@ -282,7 +282,7 @@ function CardPageInner() {
       setSavedRecordId(data.id ?? null);
       sessionStorage.removeItem("ootdData");
       if (data.share_id) setShareId(data.share_id);
-      addToast("캘린더에 저장됐습니다.", "success");
+      addToast("캘린더에 저장됐습니다. 아이템 이미지는 백그라운드에서 생성돼요.", "success");
     } catch {
       addToast("저장에 실패했습니다.", "error");
     } finally {

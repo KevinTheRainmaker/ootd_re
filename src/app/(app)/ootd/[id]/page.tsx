@@ -23,8 +23,8 @@ function OotdDetailInner() {
   const [deleting, setDeleting] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
 
-  useEffect(() => {
-    const load = async () => {
+  const loadRecord = useCallback(
+    async (silent = false) => {
       try {
         const res = await fetch(`/api/ootd/${id}`);
         if (res.status === 404) {
@@ -32,20 +32,37 @@ function OotdDetailInner() {
           return;
         }
         if (!res.ok) {
-          addToast("불러오기에 실패했습니다.", "error");
+          if (!silent) addToast("불러오기에 실패했습니다.", "error");
           return;
         }
         const data: OotdRecord = await res.json();
         setRecord(data);
       } catch {
-        addToast("네트워크 오류가 발생했습니다.", "error");
+        if (!silent) addToast("네트워크 오류가 발생했습니다.", "error");
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, router]);
+    },
+    [id, router, addToast],
+  );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadRecord(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadRecord]);
+
+  const hasPendingImages =
+    record?.items?.some(
+      (item) =>
+        item.extraction_status === "queued" ||
+        item.extraction_status === "processing",
+    ) ?? false;
+
+  useEffect(() => {
+    if (!hasPendingImages) return;
+    const timer = window.setInterval(() => void loadRecord(true), 3_000);
+    return () => window.clearInterval(timer);
+  }, [hasPendingImages, loadRecord]);
 
   const handleTogglePublic = useCallback(async () => {
     if (!record || toggling) return;
@@ -278,6 +295,17 @@ function OotdDetailInner() {
                     {[item.brand, item.product_name]
                       .filter(Boolean)
                       .join(" · ")}
+                  </p>
+                )}
+                {(item.extraction_status === "queued" ||
+                  item.extraction_status === "processing") && (
+                  <p className="text-xs text-zinc-500">
+                    아이템 이미지를 백그라운드에서 생성하는 중...
+                  </p>
+                )}
+                {item.extraction_status === "failed" && (
+                  <p className="text-xs text-amber-700">
+                    원본과 일치하는 분리 이미지를 만들지 못해 crop을 표시합니다.
                   </p>
                 )}
               </div>

@@ -1,4 +1,16 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "src/app/api/queues/item-extraction/route.ts": {
+      "maxDuration": 300,
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "ootd-item-extraction"
+        }
+      ]
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/cleanup",

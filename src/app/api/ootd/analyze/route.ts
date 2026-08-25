@@ -134,6 +134,7 @@ export async function POST(
           item.bounding_box,
           item.category,
           item.color_hex,
+          body.image_url,
         );
         const { url } = await uploadItemCrop(
           crop,

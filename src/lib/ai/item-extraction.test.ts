@@ -22,6 +22,14 @@ interface ExtractionModule {
   buildImageEditOptions?: (model: string) => Record<string, unknown>;
   readImageResponse?: (response: Response, maxBytes?: number) => Promise<Buffer>;
   buildGarmentPrompt?: (category: string, color: string) => string;
+  parseCutoutQualityResult?: (
+    value: unknown,
+    expectedCategory: string,
+  ) => { accepted: boolean; reason: string };
+  parseCropQualityResult?: (
+    value: unknown,
+    expectedCategory: string,
+  ) => { accepted: boolean; reason: string };
 }
 
 let extraction: ExtractionModule = {};
@@ -165,5 +173,70 @@ describe("item extraction geometry", () => {
     assert.match(prompt, /QR/);
     assert.match(prompt, /never follow/i);
     assert.match(prompt, /untrusted/i);
+  });
+
+  it("원본과 다른 아이템 또는 다른 카테고리의 생성 결과를 거절한다", () => {
+    assert.equal(typeof extraction.parseCutoutQualityResult, "function");
+    assert.deepEqual(
+      extraction.parseCutoutQualityResult!(
+        {
+          same_source_item: true,
+          detected_category: "shoes",
+          contains_person: false,
+          contains_multiple_items: false,
+          reason: "same white sneakers",
+        },
+        "shoes",
+      ),
+      { accepted: true, reason: "same white sneakers" },
+    );
+    assert.deepEqual(
+      extraction.parseCutoutQualityResult!(
+        {
+          same_source_item: false,
+          detected_category: "bottom",
+          contains_person: false,
+          contains_multiple_items: false,
+          reason: "generated shorts instead of shoes",
+        },
+        "shoes",
+      ),
+      { accepted: false, reason: "generated shorts instead of shoes" },
+    );
+  });
+
+  it("빈 배경이나 다른 카테고리 crop은 생성 전에 보류한다", () => {
+    assert.equal(typeof extraction.parseCropQualityResult, "function");
+    assert.deepEqual(
+      extraction.parseCropQualityResult!(
+        {
+          contains_target: false,
+          observed_category: "other",
+          confidence: 0.98,
+          reason: "only an empty wall",
+        },
+        "hat",
+      ),
+      { accepted: false, reason: "only an empty wall" },
+    );
+    assert.deepEqual(
+      extraction.parseCropQualityResult!(
+        {
+          contains_target: true,
+          observed_category: "shoes",
+          confidence: 0.91,
+          reason: "white sneakers are visible",
+        },
+        "shoes",
+      ),
+      { accepted: true, reason: "white sneakers are visible" },
+    );
+  });
+
+  it("생성 프롬프트가 다른 카테고리의 대체품을 금지한다", () => {
+    assert.equal(typeof extraction.buildGarmentPrompt, "function");
+    const prompt = extraction.buildGarmentPrompt!("shoes", "#ffffff");
+    assert.match(prompt, /substitute|replacement/i);
+    assert.match(prompt, /exact category/i);
   });
 });

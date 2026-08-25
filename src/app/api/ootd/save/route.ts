@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { nanoid } from "nanoid";
 import { getAuthSession } from "@/lib/auth";
@@ -10,6 +10,12 @@ import {
   parseSaveOotdRequest,
 } from "@/lib/ootd-classification";
 import type { SaveOotdRequest, SaveOotdResponse, ApiError } from "@/types/api";
+import { send } from "@vercel/queue";
+import {
+  runWithConcurrency,
+  selectPendingExtractions,
+} from "@/lib/ai/background-extraction";
+import { processItemExtraction } from "@/lib/ai/item-extraction-worker";
 
 const MAX_REQUEST_BYTES = 64 * 1024;
 
@@ -136,6 +142,51 @@ export async function POST(
       weather_snapshot: body.weatherSnapshot ?? null,
       items: body.items,
     });
+
+    const pendingExtractions = selectPendingExtractions(
+      body.items as unknown as Array<Record<string, unknown>>,
+    );
+    try {
+      if (process.env.VERCEL !== "1") {
+        after(async () => {
+          try {
+            await runWithConcurrency(pendingExtractions, 2, async (task) => {
+              await processItemExtraction(
+                session.user.id,
+                task.extractionId,
+                task.cropImagePath,
+              );
+            });
+          } catch (backgroundError) {
+            console.error("[save] 로컬 백그라운드 이미지 작업 실패:", backgroundError);
+          }
+        });
+      } else {
+      await runWithConcurrency(pendingExtractions, 4, async (task) => {
+        await send(
+          "ootd-item-extraction",
+          {
+            userId: session.user.id,
+            extractionId: task.extractionId,
+            cropImagePath: task.cropImagePath,
+          },
+          {
+            idempotencyKey: task.extractionId,
+            retentionSeconds: 7 * 24 * 60 * 60,
+          },
+        );
+      });
+      }
+    } catch (dispatchError) {
+      console.error("[save] 아이템 이미지 작업 예약 실패:", dispatchError);
+      return NextResponse.json(
+        {
+          error: "착장은 저장했지만 아이템 이미지 작업을 예약하지 못했습니다. 다시 저장해주세요.",
+          code: "item_extraction_dispatch_failed",
+        },
+        { status: 503 },
+      );
+    }
 
     return NextResponse.json(
       { id: record.id, share_id: record.share_id },

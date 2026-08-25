@@ -204,3 +204,31 @@
 - 실제 E2E: 동일 업로드에서 analyze 200/4 private crops, cutout 201, 완료 재요청 200, save 201, owner detail 200에서 서명된 crop+cutout 유지.
 - 테스트 정리: E2E가 만든 OOTD/job/Storage 객체와 사용량 증가를 원복했고 jobs 0, item bucket root 0을 확인했다.
 - 최종 검증: 25 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js 16.3.2 production build PASS, npm audit 0 vulnerabilities.
+
+## 아이템 이미지 비동기화·정확도 개선 (2026-08-25)
+
+### 재현 및 성공 기준
+
+- [x] 카드 생성/저장은 개별 cutout 생성 완료를 기다리지 않는다.
+- [x] 저장된 OOTD는 백그라운드 작업 완료 후 아이템 이미지를 자동으로 조회한다.
+- [x] 원본에 없는 아이템이나 카테고리가 다른 생성 결과는 최종 이미지로 채택하지 않는다.
+- [x] 실패하거나 신뢰도가 낮은 생성 결과는 원본 crop을 안전한 fallback으로 유지한다.
+
+### 계획
+
+- [x] 1. 실제 오인식 데이터와 현재 UI 대기 조건의 근본 원인을 확정한다.
+- [x] 2. 비동기 저장 상태와 품질 필터 회귀 테스트를 RED로 확인한다.
+- [x] 3. 저장 후 비동기 추출 트리거와 상태 조회를 구현한다.
+- [x] 4. 감지·생성 품질 가드와 crop fallback을 구현한다.
+- [x] 5. 마이그레이션·단위·DB smoke·보안 리뷰를 통과한다.
+- [ ] 6. `main`에 푸시하고 운영 배포를 검증한다.
+
+### Root cause / Review
+
+- 실제 오류 crop을 확인한 결과 `hat`은 빈 벽, `shoes`는 바닥과 매트를 가리켰다. bbox 형식은 유효했지만 목표 아이템이 없었고, 단정형 이미지 프롬프트가 cap과 shorts를 새로 창작했다.
+- 분석 화면의 브라우저 worker가 네 개 이미지를 두 개씩 생성하고 전부 끝날 때까지 카드 진행을 차단해 약 90초가 사용자 대기에 붙었다.
+- 분석 단계는 private crop과 queued job까지만 만들고, 저장 RPC가 pending job을 OOTD에 원자 연결한 뒤 Vercel Queue가 생성 작업을 처리하도록 분리했다. 로컬 개발에서는 Next `after()`로 동일한 비차단 흐름을 제공한다.
+- worker는 이미지 edit 전에 crop grounding을 검사하고, 생성 후 원본 전체 사진과 결과의 동일성·카테고리를 다시 검사한다. 불일치하면 cutout을 저장하지 않고 소유자에게 private crop만 표시한다.
+- Vision 파생 자유 문자열은 downstream AI 프롬프트에서 제거했고, VR·AR 헤드셋·헤드폰·스포츠 보호 장비를 hat/accessory로 분류하지 않도록 감지 규칙을 강화했다.
+- 010 migration은 pending 저장과 complete fanout을 지원하며, save/complete 경합은 정렬된 job row lock으로 직렬화한다. 원격 적용 후 source 제약·함수 권한·private bucket 9개 항목과 rollback smoke를 통과했다.
+- 검증: 32 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS, security review merge blocker 0.

@@ -7,12 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsc -p tsconfig.tests.json && node --test node_modules/.cache/ootd-tests/lib/ootd-classification.test.js node_modules/.cache/ootd-tests/lib/auth-token.test.js node_modules/.cache/ootd-tests/lib/ai/vision-prompt.test.js node_modules/.cache/ootd-tests/lib/ai/item-extraction.test.js"
+    "test": "tsc -p tsconfig.tests.json && node --test node_modules/.cache/ootd-tests/lib/ootd-classification.test.js node_modules/.cache/ootd-tests/lib/auth-token.test.js node_modules/.cache/ootd-tests/lib/ai/vision-prompt.test.js node_modules/.cache/ootd-tests/lib/ai/item-extraction.test.js node_modules/.cache/ootd-tests/lib/ai/background-extraction.test.js"
   },
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",
     "@supabase/supabase-js": "^2.106.2",
     "@vercel/og": "^1.0.2",
+    "@vercel/queue": "^0.5.0",
     "nanoid": "^5.1.16",
     "next": "16.3.2",
     "next-auth": "^4.24.15",

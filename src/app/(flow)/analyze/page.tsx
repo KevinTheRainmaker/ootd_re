@@ -23,77 +23,8 @@ function AnalyzePageInner() {
   const [stepIndex, setStepIndex] = useState(0);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [items, setItems] = useState<AnalyzeResponse["items"]>([]);
-  const [extractingIds, setExtractingIds] = useState<Set<string>>(new Set());
-  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
-
-  const extractItemImage = useCallback(
-    async (item: AnalyzeResponse["items"][number]) => {
-      if (!item.extraction_id || !item.crop_image_path || item.image_url) return;
-      const extractionId = item.extraction_id;
-      setExtractingIds((previous) => new Set(previous).add(extractionId));
-      setFailedIds((previous) => {
-        const next = new Set(previous);
-        next.delete(extractionId);
-        return next;
-      });
-
-      try {
-        const response = await fetch("/api/ootd/item-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            extraction_id: extractionId,
-            crop_image_path: item.crop_image_path,
-          }),
-        });
-        const body = await response.json();
-        if (
-          !response.ok ||
-          typeof body.image_url !== "string" ||
-          typeof body.image_path !== "string"
-        ) {
-          throw new Error(body.error ?? "아이템 이미지 생성 실패");
-        }
-        setItems((previous) =>
-          previous.map((current) =>
-            current.extraction_id === extractionId
-              ? {
-                  ...current,
-                  image_url: body.image_url,
-                  image_path: body.image_path,
-                }
-              : current,
-          ),
-        );
-      } catch {
-        setFailedIds((previous) => new Set(previous).add(extractionId));
-        addToast("일부 아이템 이미지 생성에 실패했습니다.", "error");
-      } finally {
-        setExtractingIds((previous) => {
-          const next = new Set(previous);
-          next.delete(extractionId);
-          return next;
-        });
-      }
-    },
-    [addToast],
-  );
-
-  const extractAllItemImages = useCallback(
-    async (detectedItems: AnalyzeResponse["items"]) => {
-      let cursor = 0;
-      const worker = async () => {
-        while (cursor < detectedItems.length) {
-          const item = detectedItems[cursor++];
-          await extractItemImage(item);
-        }
-      };
-      await Promise.all([worker(), worker()]);
-    },
-    [extractItemImage],
-  );
 
   useEffect(() => {
     if (!imageUrl) {
@@ -126,7 +57,6 @@ function AnalyzePageInner() {
         const data: AnalyzeResponse = await res.json();
         setResult(data);
         setItems(data.items);
-        void extractAllItemImages(data.items);
       } catch {
         addToast("네트워크 오류가 발생했습니다.", "error");
       } finally {
@@ -184,10 +114,6 @@ function AnalyzePageInner() {
     if (!imageUrl || !result) return;
     if (items.length === 0) {
       addToast("저장할 아이템을 하나 이상 추가해주세요.", "error");
-      return;
-    }
-    if (items.some((item) => item.extraction_id && !item.image_url)) {
-      addToast("모든 아이템 이미지 추출을 완료하거나 다시 시도해주세요.", "error");
       return;
     }
     setGenerating(true);
@@ -300,7 +226,7 @@ function AnalyzePageInner() {
           분석 결과
         </h1>
         <p className="mt-1 text-sm text-[#444748]">
-          아이템을 클릭해서 수정할 수 있어요
+          아이템을 확인하고 수정할 수 있어요
         </p>
       </header>
 
@@ -355,13 +281,8 @@ function AnalyzePageInner() {
                 ? "manual"
                 : item.image_url
                   ? "ready"
-                  : extractingIds.has(item.extraction_id)
-                    ? "processing"
-                    : failedIds.has(item.extraction_id)
-                      ? "failed"
-                      : "pending"
+                  : "pending"
             }
-            onRetry={() => void extractItemImage(item)}
           />
         ))}
         <button
@@ -373,6 +294,10 @@ function AnalyzePageInner() {
           + 누락된 아이템 추가 {items.length >= 8 ? "(최대 8개)" : ""}
         </button>
       </section>
+
+      <p className="w-full max-w-sm rounded-2xl bg-zinc-100 px-4 py-3 text-xs leading-relaxed text-zinc-600">
+        개별 의류 이미지는 저장 후 백그라운드에서 생성됩니다. 원본과 다른 결과는 저장하지 않고 현재 crop을 유지합니다.
+      </p>
 
       {/* CTA */}
       <div className="w-full max-w-sm flex flex-col gap-2 pb-6">

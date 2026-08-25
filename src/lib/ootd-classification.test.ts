@@ -249,4 +249,15 @@ describe("assertOwnedItemImagePair", () => {
       OotdValidationError,
     );
   });
+
+  it("백그라운드 처리 전에는 작업 ID와 crop만 저장할 수 있다", () => {
+    assert.doesNotThrow(() =>
+      assertOwnedItemImagePair(
+        extractionId,
+        null,
+        `${userId}/${extractionId}/crop.png`,
+        userId,
+      ),
+    );
+  });
 });

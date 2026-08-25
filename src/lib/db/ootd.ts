@@ -57,11 +57,15 @@ export async function createOotdRecord(
   return record;
 }
 
-export async function getOotdRecord(id: string): Promise<OotdRecord | null> {
+export async function getOotdRecord(
+  id: string,
+  userId: string,
+): Promise<OotdRecord | null> {
   const { data, error } = await supabaseAdmin
     .from("ootd_records")
-    .select("*, items:ootd_items(*)")
+    .select("*, items:ootd_items(*, extraction_job:item_extraction_jobs(status,error_code))")
     .eq("id", id)
+    .eq("user_id", userId)
     .single();
 
   if (error) return null;
@@ -88,16 +92,32 @@ async function hydrateItemImages(
 ): Promise<OotdRecord> {
   if (!record.items) return record;
   const items = await Promise.all(
-    record.items.map(async (item) => ({
-      ...item,
-      image_url: item.image_path
-        ? await getSignedItemImageUrl(item.image_path)
-        : null,
-      crop_image_url:
-        includeCrop && item.crop_image_path
-          ? await getSignedItemImageUrl(item.crop_image_path)
+    record.items.map(async (item) => {
+      const itemWithJob = item as OotdItem & {
+        extraction_job?:
+          | { status?: OotdItem["extraction_status"]; error_code?: string | null }
+          | Array<{ status?: OotdItem["extraction_status"]; error_code?: string | null }>
+          | null;
+      };
+      const rawJob = Array.isArray(itemWithJob.extraction_job)
+        ? itemWithJob.extraction_job[0]
+        : itemWithJob.extraction_job;
+      const { extraction_job: _extractionJob, ...safeItem } = itemWithJob;
+      void _extractionJob;
+      return {
+        ...safeItem,
+        extraction_status:
+          rawJob?.status ?? (item.image_path ? "completed" : null),
+        extraction_error_code: rawJob?.error_code ?? null,
+        image_url: item.image_path
+          ? await getSignedItemImageUrl(item.image_path)
           : null,
-    })),
+        crop_image_url:
+          includeCrop && item.crop_image_path
+            ? await getSignedItemImageUrl(item.crop_image_path)
+            : null,
+      };
+    }),
   );
   return { ...record, items };
 }

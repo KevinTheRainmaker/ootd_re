@@ -1,24 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import {
-  generateGarmentCutout,
-  parseItemImageRequest,
-  readImageResponse,
-} from "@/lib/ai/item-extraction";
-import {
-  getSignedItemImageUrl,
-  uploadItemCutout,
-} from "@/lib/storage";
+import { parseItemImageRequest } from "@/lib/ai/item-extraction";
+import { getSignedItemImageUrl } from "@/lib/storage";
 import {
   assertOwnedItemImagePath,
 } from "@/lib/ootd-classification";
 import {
-  claimItemExtraction,
-  completeItemExtraction,
-  failItemExtraction,
-} from "@/lib/db/item-extraction";
+  ItemExtractionBusyError,
+  processItemExtraction,
+} from "@/lib/ai/item-extraction-worker";
 import type { ApiError } from "@/types/api";
-import { createHash } from "node:crypto";
 
 export const maxDuration = 300;
 
@@ -86,68 +77,35 @@ export async function POST(
     );
   }
 
-  let claimToken: string | null = null;
   try {
-    const claim = await claimItemExtraction(
+    const outcome = await processItemExtraction(
       session.user.id,
       body.extraction_id,
       body.crop_image_path,
     );
-    if (claim.disposition === "completed" && claim.image_path) {
+    if (outcome.status === "failed") {
       return NextResponse.json(
         {
-          image_url: await getSignedItemImageUrl(claim.image_path),
-          image_path: claim.image_path,
+          error: "원본과 일치하는 아이템 이미지를 만들지 못해 crop을 유지합니다.",
+          code: outcome.errorCode,
         },
-        { status: 200 },
+        { status: 422 },
       );
     }
-    if (claim.disposition === "busy" || !claim.claim_token) {
-      return NextResponse.json(
-        {
-          error: "같은 아이템 이미지를 이미 생성하고 있습니다.",
-          code: "item_image_processing",
-        },
-        { status: 409 },
-      );
-    }
-    claimToken = claim.claim_token;
-
-    const signedUrl = await getSignedItemImageUrl(body.crop_image_path, 5 * 60);
-    const cropResponse = await fetch(signedUrl, {
-      signal: AbortSignal.timeout(15_000),
-    });
-    const crop = await readImageResponse(cropResponse);
-
-    const cutout = await generateGarmentCutout(
-      crop,
-      claim.category,
-      claim.color_hex,
+    return NextResponse.json(
+      {
+        image_url: await getSignedItemImageUrl(outcome.imagePath),
+        image_path: outcome.imagePath,
+      },
+      { status: 201 },
     );
-    const { url, path } = await uploadItemCutout(
-      cutout,
-      session.user.id,
-      body.extraction_id,
-      claimToken,
-    );
-    await completeItemExtraction(
-      session.user.id,
-      body.extraction_id,
-      claimToken,
-      path,
-      createHash("sha256").update(cutout).digest("hex"),
-    );
-    return NextResponse.json({ image_url: url, image_path: path }, { status: 201 });
   } catch (error) {
     console.error("[item-image] 의류 분리 실패", error);
     const message = error instanceof Error ? error.message : "unknown";
-    if (claimToken) {
-      await failItemExtraction(
-        session.user.id,
-        body.extraction_id,
-        claimToken,
-        "generation_failed",
-        message,
+    if (error instanceof ItemExtractionBusyError) {
+      return NextResponse.json(
+        { error: "같은 아이템 이미지를 이미 생성하고 있습니다.", code: "item_image_processing" },
+        { status: 409 },
       );
     }
     if (

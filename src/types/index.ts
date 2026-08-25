@@ -47,6 +47,9 @@ export interface OotdItem {
   image_url?: string | null;
   /** 소유자 상세 화면에서만 발급하며 공개 공유 응답에는 포함하지 않는다. */
   crop_image_url?: string | null;
+  /** 백그라운드 이미지 작업 상태. 저장 입력이 아니라 조회 응답에서만 제공한다. */
+  extraction_status?: "queued" | "processing" | "completed" | "failed" | null;
+  extraction_error_code?: string | null;
   bounding_box: BoundingBox | null;
   order_idx: number;
   created_at: string;

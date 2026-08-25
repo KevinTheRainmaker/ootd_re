@@ -239,6 +239,9 @@ export default function ItemEditCard({
         {extractionStatus === "processing" && (
           <p className="text-xs text-zinc-500">빈 의류 이미지로 분리하는 중...</p>
         )}
+        {extractionStatus === "pending" && (
+          <p className="text-xs text-zinc-500">저장 후 아이템 이미지를 생성해요</p>
+        )}
         {extractionStatus === "failed" && (
           <button
             type="button"
