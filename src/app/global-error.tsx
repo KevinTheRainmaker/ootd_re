@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 
 interface ErrorProps {
@@ -30,14 +31,12 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             <Button size="md" className="w-full" onClick={reset}>
               다시 시도
             </Button>
-            <Button
-              variant="ghost"
-              size="md"
-              className="w-full"
-              onClick={() => (location.href = "/")}
+            <Link
+              href="/"
+              className="inline-flex h-10 w-full items-center justify-center rounded-full px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
             >
               홈으로
-            </Button>
+            </Link>
           </div>
         </main>
       </body>

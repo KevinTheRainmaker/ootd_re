@@ -256,19 +256,31 @@ function OotdDetailInner() {
           {items.map((item) => (
             <div
               key={item.id}
-              className="rounded-2xl border border-zinc-200 bg-white p-4 flex flex-col gap-2"
+              className="rounded-2xl border border-zinc-200 bg-white p-4 flex gap-3"
             >
-              <ItemBadge item={item} size="sm" />
-              {item.style_description && (
-                <p className="text-sm text-zinc-700 leading-relaxed">
-                  {item.style_description}
-                </p>
+              {(item.image_url || item.crop_image_url) && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.image_url ?? item.crop_image_url ?? ""}
+                  alt="개별 의류"
+                  className="h-24 w-24 shrink-0 rounded-xl bg-zinc-50 object-contain"
+                />
               )}
-              {(item.brand || item.product_name) && (
-                <p className="text-xs text-zinc-400">
-                  {[item.brand, item.product_name].filter(Boolean).join(" · ")}
-                </p>
-              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <ItemBadge item={item} size="sm" />
+                {item.style_description && (
+                  <p className="text-sm text-zinc-700 leading-relaxed">
+                    {item.style_description}
+                  </p>
+                )}
+                {(item.brand || item.product_name) && (
+                  <p className="text-xs text-zinc-400">
+                    {[item.brand, item.product_name]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
+              </div>
             </div>
           ))}
         </section>

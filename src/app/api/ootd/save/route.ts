@@ -5,6 +5,7 @@ import { getAuthSession } from "@/lib/auth";
 import { createOotdWithItems } from "@/lib/db/ootd";
 import {
   OotdValidationError,
+  assertOwnedItemImagePair,
   assertOwnedStorageImageUrl,
   parseSaveOotdRequest,
 } from "@/lib/ootd-classification";
@@ -67,6 +68,14 @@ export async function POST(
       ["originals", "cards"],
       storageUrl,
     );
+    for (const item of body.items) {
+      assertOwnedItemImagePair(
+        item.extraction_job_id,
+        item.image_path,
+        item.crop_image_path,
+        session.user.id,
+      );
+    }
   } catch (error) {
     if (error instanceof RequestTooLargeError) {
       return NextResponse.json(

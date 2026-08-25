@@ -31,6 +31,8 @@ interface ItemEditCardProps {
   index: number;
   onChange: (index: number, updated: EditableItem) => void;
   onDelete: (index: number) => void;
+  extractionStatus?: "manual" | "pending" | "processing" | "ready" | "failed";
+  onRetry?: () => void;
 }
 
 export default function ItemEditCard({
@@ -38,6 +40,8 @@ export default function ItemEditCard({
   index,
   onChange,
   onDelete,
+  extractionStatus = "manual",
+  onRetry,
 }: ItemEditCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<EditableItem>(item);
@@ -70,6 +74,14 @@ export default function ItemEditCard({
   if (editing) {
     return (
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 flex flex-col gap-3 shadow-sm">
+        {(item.image_url || item.crop_image_url) && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.image_url ?? item.crop_image_url ?? ""}
+            alt="분리된 의류 미리보기"
+            className="h-32 w-full rounded-xl bg-zinc-50 object-contain"
+          />
+        )}
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-500">카테고리</label>
           <select
@@ -179,29 +191,64 @@ export default function ItemEditCard({
     );
   }
 
+  const previewUrl = item.image_url ?? item.crop_image_url;
+
   return (
-    <button
-      type="button"
-      onClick={handleEdit}
-      className="w-full text-left rounded-2xl border border-zinc-200 bg-white p-4 flex flex-col gap-2 hover:border-zinc-400 hover:shadow-sm transition-all group"
-      aria-label={`${item.category} 아이템 편집`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <ItemBadge item={item} size="sm" />
-        <span className="text-xs text-zinc-400 group-hover:text-zinc-600 transition-colors shrink-0 mt-0.5">
-          편집
-        </span>
+    <div className="w-full text-left rounded-2xl border border-zinc-200 bg-white p-4 flex gap-3 hover:border-zinc-400 hover:shadow-sm transition-all group">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
+        {previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewUrl}
+            alt="분리된 의류"
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <span className="material-symbols-outlined flex h-full items-center justify-center text-zinc-300">
+            checkroom
+          </span>
+        )}
+        {extractionStatus === "processing" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/75">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-900" />
+          </div>
+        )}
       </div>
-      {item.style_description && (
-        <p className="text-sm text-zinc-700 leading-relaxed">
-          {item.style_description}
-        </p>
-      )}
-      {(item.brand || item.product_name) && (
-        <p className="text-xs text-zinc-400">
-          {[item.brand, item.product_name].filter(Boolean).join(" · ")}
-        </p>
-      )}
-    </button>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <ItemBadge item={item} size="sm" />
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="shrink-0 text-xs text-zinc-400 transition-colors hover:text-zinc-700"
+            aria-label={`${item.category} 아이템 편집`}
+          >
+            편집
+          </button>
+        </div>
+        {item.style_description && (
+          <p className="text-sm leading-relaxed text-zinc-700">
+            {item.style_description}
+          </p>
+        )}
+        {(item.brand || item.product_name) && (
+          <p className="text-xs text-zinc-400">
+            {[item.brand, item.product_name].filter(Boolean).join(" · ")}
+          </p>
+        )}
+        {extractionStatus === "processing" && (
+          <p className="text-xs text-zinc-500">빈 의류 이미지로 분리하는 중...</p>
+        )}
+        {extractionStatus === "failed" && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="self-start text-xs font-medium text-red-600 hover:text-red-800"
+          >
+            이미지 추출 다시 시도
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

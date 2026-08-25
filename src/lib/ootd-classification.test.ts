@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 import {
   OotdValidationError,
   assertOwnedStorageImageUrl,
+  assertOwnedItemImagePath,
+  assertOwnedItemImagePair,
   normalizeOotdItems,
   parseAnalyzeResponse,
   parseSaveOotdRequest,
@@ -14,6 +16,9 @@ const validItem = {
   style_description: "  오버핏 셔츠  ",
   brand: "  Brand  ",
   product_name: "  Oxford  ",
+  image_path: "  user/item/cutout.png  ",
+  crop_image_path: "  user/item/crop.png  ",
+  bounding_box: { x: -20, y: 900, width: 1200, height: 500 },
   order_idx: 99,
 };
 
@@ -31,6 +36,10 @@ describe("normalizeOotdItems", () => {
         style_description: "오버핏 셔츠",
         brand: "Brand",
         product_name: "Oxford",
+        extraction_job_id: null,
+        image_path: "user/item/cutout.png",
+        crop_image_path: "user/item/crop.png",
+        bounding_box: { x: 0, y: 900, width: 1000, height: 100 },
         order_idx: 0,
       },
       {
@@ -39,6 +48,10 @@ describe("normalizeOotdItems", () => {
         style_description: "오버핏 셔츠",
         brand: "Brand",
         product_name: "Oxford",
+        extraction_job_id: null,
+        image_path: "user/item/cutout.png",
+        crop_image_path: "user/item/crop.png",
+        bounding_box: { x: 0, y: 900, width: 1000, height: 100 },
         order_idx: 1,
       },
     ]);
@@ -67,6 +80,15 @@ describe("parseAnalyzeResponse", () => {
     assert.equal(result.summary, "미니멀 룩");
     assert.deepEqual(result.hashtags, ["#미니멀", "#데일리"]);
     assert.equal(result.items[0].order_idx, 0);
+    const analyzedItem = result.items[0] as unknown as {
+      bounding_box?: { x: number; y: number; width: number; height: number };
+    };
+    assert.deepEqual(analyzedItem.bounding_box, {
+      x: 0,
+      y: 900,
+      width: 1000,
+      height: 100,
+    });
   });
 });
 
@@ -154,6 +176,75 @@ describe("assertOwnedStorageImageUrl", () => {
           userId,
           ["originals", "cards"],
           storageUrl,
+        ),
+      OotdValidationError,
+    );
+  });
+});
+
+describe("assertOwnedItemImagePath", () => {
+  const userId = "9af0ad10-cffc-4dfe-b02d-eaecf1a6fb2d";
+  const extractionId = "a3bb189e-8bf9-4b47-a1ea-6f54bce21f4b";
+
+  it("사용자와 extraction ID에 정확히 결합된 item 경로만 허용한다", () => {
+    assert.doesNotThrow(() =>
+      assertOwnedItemImagePath(
+        `${userId}/${extractionId}/crop.png`,
+        userId,
+        extractionId,
+        "crop",
+      ),
+    );
+    assert.throws(
+      () =>
+        assertOwnedItemImagePath(
+          `other/${extractionId}/crop.png`,
+          userId,
+          extractionId,
+          "crop",
+        ),
+      OotdValidationError,
+    );
+    assert.throws(
+      () =>
+        assertOwnedItemImagePath(
+          `${userId}/../${extractionId}/crop.png`,
+          userId,
+          extractionId,
+          "crop",
+        ),
+      OotdValidationError,
+    );
+  });
+});
+
+describe("assertOwnedItemImagePair", () => {
+  const userId = "9af0ad10-cffc-4dfe-b02d-eaecf1a6fb2d";
+  const extractionId = "a3bb189e-8bf9-4b47-a1ea-6f54bce21f4b";
+  const claimId = "24e2852d-a0ca-4a22-bb7f-b50f8fad7e70";
+
+  it("수동 아이템은 이미지가 모두 없을 때 허용한다", () => {
+    assert.doesNotThrow(() =>
+      assertOwnedItemImagePair(null, null, null, userId),
+    );
+  });
+
+  it("같은 완료 작업의 crop과 claim별 cutout만 허용한다", () => {
+    assert.doesNotThrow(() =>
+      assertOwnedItemImagePair(
+        extractionId,
+        `${userId}/${extractionId}/claims/${claimId}/cutout.png`,
+        `${userId}/${extractionId}/crop.png`,
+        userId,
+      ),
+    );
+    assert.throws(
+      () =>
+        assertOwnedItemImagePair(
+          extractionId,
+          `${userId}/00000000-0000-4000-8000-000000000000/claims/${claimId}/cutout.png`,
+          `${userId}/${extractionId}/crop.png`,
+          userId,
         ),
       OotdValidationError,
     );

@@ -7,6 +7,7 @@ export const VISION_PROMPT = `이 사진에서 사람이 실제로 착용한 의
 - 스포츠, 운동, 일상, 여행, 공연, 거울 셀카, 행동 중인 사진도 모두 분석 대상입니다.
 - 신체 일부가 가려져 있어도 보이는 의류만 분석하세요.
 - 골프채 같은 스포츠 장비나 배경 물체는 의류 아이템으로 분류하지 마세요.
+- 각 아이템의 의류 전체를 빠짐없이 감싸는 bounding_box를 원본 이미지 기준 0부터 1000까지의 정수 좌표로 반환하세요. x/y는 좌상단, width/height는 너비와 높이입니다.
 - 사람이 전혀 없거나 착용 의류를 식별할 수 없는 경우에만 {"error": "not_fashion"}을 반환하세요.
 
 {
@@ -14,10 +15,12 @@ export const VISION_PROMPT = `이 사진에서 사람이 실제로 착용한 의
     {
       "category": "top" | "bottom" | "outer" | "shoes" | "bag" | "accessory" | "hat" | "glasses" | "watch" | "other",
       "color": "색상 설명",
+      "color_hex": "#RRGGBB",
       "style_description": "스타일 설명 (한국어, 20자 이내)",
       "brand": null,
       "order_idx": 0,
-      "product_name": null
+      "product_name": null,
+      "bounding_box": { "x": 0, "y": 0, "width": 1000, "height": 1000 }
     }
   ],
   "summary": "전체 스타일 요약 (한국어, 50자 이내)",

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteOldFreeUserRecords } from "@/lib/db/ootd";
+import {
+  deleteAbandonedItemExtractions,
+  deleteOldFreeUserRecords,
+} from "@/lib/db/ootd";
 import { supabaseAdmin } from "@/lib/supabase";
 
 /**
@@ -20,11 +23,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { deleted, imageUrls } = await deleteOldFreeUserRecords();
+    const { deleted, imageUrls, itemImagePaths } =
+      await deleteOldFreeUserRecords();
+    itemImagePaths.push(...(await deleteAbandonedItemExtractions()));
 
     // Supabase Storage 이미지 삭제 (버킷별로 경로 추출)
     let storageDeleted = 0;
-    if (imageUrls.length > 0) {
+    if (imageUrls.length > 0 || itemImagePaths.length > 0) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
       const pathsToDelete: { bucket: string; path: string }[] = [];
 
@@ -34,6 +39,9 @@ export async function GET(req: NextRequest) {
           /\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/,
         );
         if (match) pathsToDelete.push({ bucket: match[1], path: match[2] });
+      }
+      for (const path of itemImagePaths) {
+        pathsToDelete.push({ bucket: "items", path });
       }
 
       // 버킷별 그룹핑 후 삭제

@@ -3,7 +3,11 @@ import { parseAnalyzeResponse } from "@/lib/ootd-classification";
 import { VISION_PROMPT, VISION_USER_PROMPT } from "@/lib/ai/vision-prompt";
 import type { AnalyzeResponse } from "@/types/api";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  timeout: 60_000,
+  maxRetries: 0,
+});
 
 function extractJson(text: string): string {
   const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -18,7 +22,7 @@ export async function analyzeOotdImage(
 ): Promise<AnalyzeResponse> {
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 1; attempt++) {
     const response = await client.chat.completions.create({
       model: "gpt-4o",
       max_tokens: 1024,

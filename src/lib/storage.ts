@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 const BUCKET_ORIGINALS = "originals";
 const BUCKET_CARDS = "cards";
+const BUCKET_ITEMS = "items";
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
 
@@ -78,4 +79,61 @@ export async function uploadCardImage(
 
   const { data } = supabaseAdmin.storage.from(BUCKET_CARDS).getPublicUrl(path);
   return { url: data.publicUrl, path };
+}
+
+export function getItemImagePath(
+  userId: string,
+  extractionId: string,
+  kind: "crop" | "cutout",
+  claimToken?: string,
+): string {
+  return kind === "crop"
+    ? `${userId}/${extractionId}/crop.png`
+    : `${userId}/${extractionId}/claims/${claimToken}/cutout.png`;
+}
+
+async function uploadItemImage(
+  buffer: Buffer,
+  userId: string,
+  extractionId: string,
+  kind: "crop" | "cutout",
+  claimToken?: string,
+): Promise<{ url: string; path: string }> {
+  const path = getItemImagePath(userId, extractionId, kind, claimToken);
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET_ITEMS)
+    .upload(path, buffer, {
+      contentType: "image/png",
+      upsert: kind === "crop",
+    });
+  if (error) throw new Error(error.message);
+  return { url: await getSignedItemImageUrl(path), path };
+}
+
+export function uploadItemCrop(
+  buffer: Buffer,
+  userId: string,
+  extractionId: string,
+) {
+  return uploadItemImage(buffer, userId, extractionId, "crop");
+}
+
+export function uploadItemCutout(
+  buffer: Buffer,
+  userId: string,
+  extractionId: string,
+  claimToken: string,
+) {
+  return uploadItemImage(buffer, userId, extractionId, "cutout", claimToken);
+}
+
+export async function getSignedItemImageUrl(
+  path: string,
+  expiresIn = 15 * 60,
+): Promise<string> {
+  const { data, error } = await supabaseAdmin.storage
+    .from(BUCKET_ITEMS)
+    .createSignedUrl(path, expiresIn);
+  if (error || !data?.signedUrl) throw new Error("아이템 이미지 URL 생성 실패");
+  return data.signedUrl;
 }

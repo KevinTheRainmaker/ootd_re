@@ -9,8 +9,20 @@ export interface AnalyzeRequest {
   image_url: string;
 }
 
+export type OotdItemInput = Omit<
+  OotdItem,
+  "id" | "ootd_id" | "created_at" | "image_url" | "crop_image_url"
+>;
+
+export type AnalyzedOotdItem = OotdItemInput & {
+  image_url: string | null;
+  crop_image_url: string | null;
+  color_hex: string | null;
+  extraction_id: string | null;
+};
+
 export interface AnalyzeResponse {
-  items: Omit<OotdItem, "id" | "ootd_id" | "created_at">[];
+  items: AnalyzedOotdItem[];
   summary: string;
   hashtags: string[];
 }
@@ -36,7 +48,7 @@ export interface SaveOotdRequest {
   client_request_id: string;
   original_image_url: string;
   card_image_url: string;
-  items: AnalyzeResponse["items"];
+  items: OotdItemInput[];
   style_summary: string;
   hashtags: string[];
   is_public: boolean;

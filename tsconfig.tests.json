@@ -16,6 +16,8 @@
     "src/lib/auth-token.test.ts",
     "src/lib/ai/vision-prompt.ts",
     "src/lib/ai/vision-prompt.test.ts",
+    "src/lib/ai/item-extraction.test.ts",
+    "src/lib/ai/item-extraction.ts",
     "src/types/index.ts",
     "src/types/api.ts"
   ]

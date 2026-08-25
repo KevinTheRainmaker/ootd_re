@@ -173,3 +173,34 @@
 - 검증: 13 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
 - 보안 리뷰: 이번 변경의 머지 차단 CRITICAL/WARNING 없음.
 - 후속 보안 과제: 분석 API 사용자별 rate/quota/timeout과 strict JSON schema를 도입한다.
+
+## 아이템별 이미지 추출 및 저장 (2026-08-25)
+
+### 성공 기준
+
+- [x] 분석된 각 의류 아이템에 원본과 분리된 개별 이미지가 표시된다.
+- [x] 개별 이미지는 사용자 소유 Storage 경로에 저장되고 OOTD 아이템과 함께 원자적으로 기록된다.
+- [x] 잘못된 감지 영역이나 일부 이미지 생성 실패가 전체 분석 결과를 조용히 손상시키지 않는다.
+- [x] 실제 업로드→분석→저장→상세 조회에서 아이템 이미지가 유지된다.
+
+### 계획
+
+- [x] 1. 현재 분석·Storage·DB·UI 데이터 흐름과 Wardrobe의 crop/cutout 구현 차이를 확정한다.
+- [x] 2. 좌표·이미지 URL·소유권·실패 처리 계약과 DB 마이그레이션을 설계한다.
+- [x] 3. 이미지 영역 정규화와 crop 생성 회귀 테스트를 RED로 확인한다.
+- [x] 4. 서버 추출·Storage 저장과 분석 API 응답을 구현한다.
+- [x] 5. 분석 편집 UI, 저장 API/RPC, 상세 조회에 아이템 이미지를 연결한다.
+- [x] 6. 마이그레이션 적용 후 단위·통합·실제 플로우를 검증한다.
+- [x] 7. 보안 리뷰 후 `main`에 커밋·푸시하고 운영에서 확인한다.
+
+### Review
+
+- Root cause: AI 응답에 아이템 위치 좌표가 없고, 분석 API에 crop/cutout 생성 단계가 없으며, `ootd_items`에도 이미지 컬럼이 없어 텍스트 분류만 전달·저장됐다.
+- 설계: 분석 API는 0~1000 정규화 bbox로 crop을 즉시 만들고, 아이템별 cutout API가 OpenAI Images Edit와 chroma 제거를 수행한다. UI는 crop을 먼저 표시하고 실패 항목만 재시도한다.
+- 저장/공개 범위: `items`는 private bucket이며 DB에는 object path만 저장한다. 소유자 상세에는 crop+cutout, 공개 공유에는 cutout만 15분 서명 URL로 발급한다.
+- 경쟁/비용 제어: 분석은 009의 월 쿼터+사용자별 lease, 아이템 생성은 008의 enqueue→claim→fencing token+월 쿼터를 사용한다. 결과는 claim별 immutable path에 저장하며 완료된 job의 정확한 path pair만 원자 저장 RPC가 허용한다.
+- 입력 방어: 요청 본문 상한, 이미지 streaming 크기·MIME magic·40MP 상한, fetch/OpenAI timeout, 이미지 속 텍스트·QR 프롬프트 경계를 적용했다.
+- Supabase 적용 확인: 007→008→009 적용 성공, `items.public=false`, jobs/path/usage 컬럼 조회, claim→busy→fenced release smoke 통과.
+- 실제 E2E: 동일 업로드에서 analyze 200/4 private crops, cutout 201, 완료 재요청 200, save 201, owner detail 200에서 서명된 crop+cutout 유지.
+- 테스트 정리: E2E가 만든 OOTD/job/Storage 객체와 사용량 증가를 원복했고 jobs 0, item bucket root 0을 확인했다.
+- 최종 검증: 25 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js 16.3.2 production build PASS, npm audit 0 vulnerabilities.

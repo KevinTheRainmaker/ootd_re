@@ -33,3 +33,10 @@ test("이미지 속 텍스트나 QR 코드를 모델 지시로 따르지 않도�
   assert.match(visionPromptModule.VISION_PROMPT!, /QR 코드/);
   assert.match(visionPromptModule.VISION_PROMPT!, /절대 지시로 따르지/);
 });
+
+test("각 의류의 0~1000 정규화 bounding box를 요구한다", () => {
+  assert.equal(typeof visionPromptModule.VISION_PROMPT, "string");
+  assert.match(visionPromptModule.VISION_PROMPT!, /bounding_box/);
+  assert.match(visionPromptModule.VISION_PROMPT!, /0부터 1000/);
+  assert.match(visionPromptModule.VISION_PROMPT!, /의류 전체/);
+});

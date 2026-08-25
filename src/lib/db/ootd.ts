@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { getSignedItemImageUrl } from "@/lib/storage";
 import type { OotdRecord, OotdItem } from "@/types";
 
 type CreateOotdWithItemsInput = Omit<
@@ -64,7 +65,7 @@ export async function getOotdRecord(id: string): Promise<OotdRecord | null> {
     .single();
 
   if (error) return null;
-  return data;
+  return hydrateItemImages(data as OotdRecord, true);
 }
 
 export async function getOotdByShareId(
@@ -78,7 +79,27 @@ export async function getOotdByShareId(
     .single();
 
   if (error) return null;
-  return data;
+  return hydrateItemImages(data as OotdRecord, false);
+}
+
+async function hydrateItemImages(
+  record: OotdRecord,
+  includeCrop: boolean,
+): Promise<OotdRecord> {
+  if (!record.items) return record;
+  const items = await Promise.all(
+    record.items.map(async (item) => ({
+      ...item,
+      image_url: item.image_path
+        ? await getSignedItemImageUrl(item.image_path)
+        : null,
+      crop_image_url:
+        includeCrop && item.crop_image_path
+          ? await getSignedItemImageUrl(item.crop_image_path)
+          : null,
+    })),
+  );
+  return { ...record, items };
 }
 
 export async function getOotdsByUserAndMonth(
@@ -125,6 +146,12 @@ export async function deleteOotdRecord(
   id: string,
   userId: string,
 ): Promise<void> {
+  const { data: target } = await supabaseAdmin
+    .from("ootd_records")
+    .select("items:ootd_items(extraction_job_id)")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
   const { error } = await supabaseAdmin
     .from("ootd_records")
     .delete()
@@ -132,6 +159,62 @@ export async function deleteOotdRecord(
     .eq("user_id", userId);
 
   if (error) throw new Error(error.message);
+  const itemPaths = await releaseUnusedItemExtractions(
+    (target?.items ?? [])
+      .map((item) => item.extraction_job_id)
+      .filter(Boolean) as string[],
+  );
+  if (itemPaths.length > 0) {
+    const { error: storageError } = await supabaseAdmin.storage
+      .from("items")
+      .remove(itemPaths);
+    if (storageError) {
+      console.error("[delete] 아이템 이미지 정리 실패", storageError);
+    }
+  }
+}
+
+async function releaseUnusedItemExtractions(
+  candidateIds: string[],
+): Promise<string[]> {
+  const uniqueIds = [...new Set(candidateIds)];
+  if (uniqueIds.length === 0) return [];
+  const { data: references, error: referenceError } = await supabaseAdmin
+    .from("ootd_items")
+    .select("extraction_job_id")
+    .in("extraction_job_id", uniqueIds);
+  if (referenceError) throw new Error(referenceError.message);
+  const used = new Set(
+    (references ?? []).map((item) => item.extraction_job_id).filter(Boolean),
+  );
+  const unusedIds = uniqueIds.filter((id) => !used.has(id));
+  if (unusedIds.length === 0) return [];
+
+  const { data: jobs, error: jobsError } = await supabaseAdmin
+    .from("item_extraction_jobs")
+    .select("extraction_id, crop_image_path, image_path")
+    .in("extraction_id", unusedIds);
+  if (jobsError) throw new Error(jobsError.message);
+  const { error: deleteError } = await supabaseAdmin
+    .from("item_extraction_jobs")
+    .delete()
+    .in("extraction_id", unusedIds);
+  if (deleteError) throw new Error(deleteError.message);
+  return (jobs ?? [])
+    .flatMap((job) => [job.crop_image_path, job.image_path])
+    .filter(Boolean) as string[];
+}
+
+export async function deleteAbandonedItemExtractions(): Promise<string[]> {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("item_extraction_jobs")
+    .select("extraction_id")
+    .lt("created_at", cutoff);
+  if (error) throw new Error(error.message);
+  return releaseUnusedItemExtractions(
+    (data ?? []).map((job) => job.extraction_id),
+  );
 }
 
 /**
@@ -141,6 +224,7 @@ export async function deleteOotdRecord(
 export async function deleteOldFreeUserRecords(): Promise<{
   deleted: number;
   imageUrls: string[];
+  itemImagePaths: string[];
 }> {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
@@ -153,22 +237,30 @@ export async function deleteOldFreeUserRecords(): Promise<{
     .eq("plan", "free");
 
   if (!freeUsers || freeUsers.length === 0)
-    return { deleted: 0, imageUrls: [] };
+    return { deleted: 0, imageUrls: [], itemImagePaths: [] };
 
   const userIds = freeUsers.map((u) => u.id);
 
   // 삭제 대상 레코드 조회 (이미지 URL 수집)
   const { data: targets } = await supabaseAdmin
     .from("ootd_records")
-    .select("id, original_image_url, card_image_url")
+    .select(
+      "id, original_image_url, card_image_url, items:ootd_items(extraction_job_id, image_path, crop_image_path)",
+    )
     .in("user_id", userIds)
     .lt("date", cutoffStr);
 
-  if (!targets || targets.length === 0) return { deleted: 0, imageUrls: [] };
+  if (!targets || targets.length === 0) {
+    return { deleted: 0, imageUrls: [], itemImagePaths: [] };
+  }
 
-  const imageUrls = targets.flatMap(
-    (r) => [r.original_image_url, r.card_image_url].filter(Boolean) as string[],
-  );
+  const imageUrls = targets.flatMap((record) => [
+    record.original_image_url,
+    record.card_image_url,
+  ]).filter(Boolean) as string[];
+  const extractionIds = targets.flatMap((record) =>
+    (record.items ?? []).map((item) => item.extraction_job_id),
+  ).filter(Boolean) as string[];
 
   const ids = targets.map((r) => r.id);
   const { error } = await supabaseAdmin
@@ -178,7 +270,12 @@ export async function deleteOldFreeUserRecords(): Promise<{
 
   if (error) throw new Error(error.message);
 
-  return { deleted: ids.length, imageUrls };
+  const releasedPaths = await releaseUnusedItemExtractions(extractionIds);
+  return {
+    deleted: ids.length,
+    imageUrls,
+    itemImagePaths: releasedPaths,
+  };
 }
 
 export async function getAllOotdsByUser(

@@ -135,6 +135,14 @@ export default async function SharePage({ params }: Props) {
                   key={item.id}
                   className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-start gap-3"
                 >
+                  {(item.image_url || item.crop_image_url) && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image_url ?? item.crop_image_url ?? ""}
+                      alt="개별 의류"
+                      className="h-20 w-20 flex-shrink-0 rounded-xl bg-[#f8f6f5] object-contain"
+                    />
+                  )}
                   {/* 카테고리 칩 */}
                   <span className="flex-shrink-0 bg-[#f1edec] text-[#444748] text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full mt-0.5">
                     {CATEGORY_KO[item.category] ?? item.category}

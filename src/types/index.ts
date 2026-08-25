@@ -25,6 +25,13 @@ export const ITEM_CATEGORIES = [
 
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface OotdItem {
   id: string;
   ootd_id: string;
@@ -33,6 +40,14 @@ export interface OotdItem {
   style_description: string | null;
   brand: string | null;
   product_name: string | null;
+  extraction_job_id: string | null;
+  image_path: string | null;
+  crop_image_path: string | null;
+  /** 요청 시 서버가 발급하는 단기 서명 URL이며 DB에는 저장하지 않는다. */
+  image_url?: string | null;
+  /** 소유자 상세 화면에서만 발급하며 공개 공유 응답에는 포함하지 않는다. */
+  crop_image_url?: string | null;
+  bounding_box: BoundingBox | null;
   order_idx: number;
   created_at: string;
 }
@@ -74,6 +89,7 @@ export interface UsageLog {
   user_id: string;
   year_month: string;
   card_generation_count: number;
+  item_generation_count: number;
   created_at: string;
   updated_at: string;
 }
