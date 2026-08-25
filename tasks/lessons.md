@@ -65,3 +65,5 @@
 30. **비싼 생성 요청은 입력 검증 뒤, 외부 I/O 전에 사용량을 원자 예약한다** — 조회와 증가를 분리하거나 원본 다운로드 뒤에 예약하면 병렬 요청·완료 요청 재전송으로 비용 또는 서버 자원을 쿼터 밖에서 소모할 수 있다. canonical fingerprint, request ID, lease와 claim token을 한 DB 트랜잭션으로 묶고 확정 실패만 멱등 환불할 것.
 
 31. **관리용 cron 인증은 환경변수 누락 시 fail-closed여야 한다** — secret이 있을 때만 검사하는 조건은 배포 설정 누락 하나로 service-role 작업을 공개한다. secret 누락은 503, 불일치는 401로 실제 작업 전에 차단할 것.
+
+32. **공개 인터랙션에는 도메인 행 전체가 아니라 화면 전용 DTO만 전달한다** — Server Component가 안전한 조회를 했더라도 Client Component에 원본 행을 넘기면 private path·bbox·작업 상태가 Flight payload에 직렬화될 수 있다. 필요한 표시 필드와 단기 공개 URL만 매핑하고, 숨은 3D face는 `aria-hidden`뿐 아니라 `inert`와 포커스 이동까지 함께 적용할 것.

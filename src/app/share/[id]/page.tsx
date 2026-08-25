@@ -2,21 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getOotdByShareId } from "@/lib/db/ootd";
+import ShareFlipCard from "@/components/share/ShareFlipCard";
+import { toShareItemViewModel } from "@/lib/share-item";
 
 type Props = { params: Promise<{ id: string }> };
-
-const CATEGORY_KO: Record<string, string> = {
-  top: "상의",
-  bottom: "하의",
-  outer: "아우터",
-  shoes: "신발",
-  bag: "가방",
-  accessory: "액세서리",
-  hat: "모자",
-  glasses: "안경",
-  watch: "시계",
-  other: "기타",
-};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -51,6 +40,10 @@ export default async function SharePage({ params }: Props) {
   if (!record) notFound();
 
   const items = record.items ?? [];
+  const shareItems = items.map((item) => ({
+    id: item.id,
+    ...toShareItemViewModel(item),
+  }));
   const dateStr = record.date
     ? new Date(record.date + "T00:00:00").toLocaleDateString("ko-KR", {
         year: "numeric",
@@ -68,21 +61,12 @@ export default async function SharePage({ params }: Props) {
         <div className="absolute inset-0 bg-gradient-to-b from-[#1c1b1b] to-[#2d2d2d]" />
 
         <div className="relative w-full max-w-xs mx-auto px-4">
-          {record.card_image_url ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={record.card_image_url}
-              alt="OOTD 카드"
-              className="w-full rounded-[24px] shadow-2xl"
-            />
-          ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={record.original_image_url}
-              alt="OOTD"
-              className="w-full rounded-[24px] shadow-2xl"
-            />
-          )}
+          <ShareFlipCard
+            frontImageUrl={
+              record.card_image_url ?? record.original_image_url
+            }
+            items={shareItems}
+          />
 
           {/* 날짜 오버레이 */}
           {dateStr && (
@@ -120,59 +104,6 @@ export default async function SharePage({ params }: Props) {
                 {tag.startsWith("#") ? tag : `#${tag}`}
               </span>
             ))}
-          </div>
-        )}
-
-        {/* 아이템 리스트 */}
-        {items.length > 0 && (
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#747878] mb-3">
-              Outfit Items
-            </p>
-            <div className="flex flex-col gap-3">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-start gap-3"
-                >
-                  {(item.image_url || item.crop_image_url) && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.image_url ?? item.crop_image_url ?? ""}
-                      alt="개별 의류"
-                      className="h-20 w-20 flex-shrink-0 rounded-xl bg-[#f8f6f5] object-contain"
-                    />
-                  )}
-                  {/* 카테고리 칩 */}
-                  <span className="flex-shrink-0 bg-[#f1edec] text-[#444748] text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full mt-0.5">
-                    {CATEGORY_KO[item.category] ?? item.category}
-                  </span>
-
-                  <div className="flex-1 min-w-0">
-                    {/* 브랜드 + 제품명 */}
-                    {(item.brand || item.product_name) && (
-                      <p className="text-sm font-semibold text-[#1c1b1b] mb-0.5">
-                        {[item.brand, item.product_name]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    )}
-                    {/* 스타일 설명 */}
-                    {item.style_description && (
-                      <p className="text-sm text-[#444748] leading-relaxed">
-                        {item.style_description}
-                      </p>
-                    )}
-                    {/* 색상 */}
-                    {item.color && (
-                      <p className="text-xs text-[#747878] mt-0.5">
-                        {item.color}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 

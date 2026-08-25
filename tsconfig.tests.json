@@ -24,6 +24,8 @@
     "src/lib/card-type.ts",
     "src/lib/card-generation.test.ts",
     "src/lib/card-generation.ts",
+    "src/lib/share-item.test.ts",
+    "src/lib/share-item.ts",
     "src/types/index.ts",
     "src/types/api.ts"
   ]

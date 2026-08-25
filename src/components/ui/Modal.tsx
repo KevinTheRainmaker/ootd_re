@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 
 interface ModalProps {
   open: boolean;
@@ -11,6 +11,7 @@ interface ModalProps {
 
 export default function Modal({ open, onClose, title, children }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -33,6 +34,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
   return (
     <dialog
       ref={dialogRef}
+      aria-labelledby={title ? titleId : undefined}
       className="rounded-2xl shadow-xl p-0 max-w-md w-full backdrop:bg-black/40 open:flex open:flex-col"
       onClick={(e) => {
         if (e.target === dialogRef.current) onClose();
@@ -40,7 +42,9 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
     >
       {title && (
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
-          <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
+          <h2 id={titleId} className="text-base font-semibold text-zinc-900">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             className="text-zinc-400 hover:text-zinc-600 transition-colors text-xl leading-none"

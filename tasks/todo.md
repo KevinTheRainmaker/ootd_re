@@ -263,3 +263,30 @@
 - 보안 재검토 결과 merge-blocking CRITICAL/WARNING 0건이다.
 - RED: 신규 모듈 부재 테스트 실패를 확인했다. GREEN: 43 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
 - 배포: `main`의 `6cf5b62`를 Vercel production에 반영했다. 누락된 `CRON_SECRET`을 Production 환경에 설정해 재배포했고, deployment Ready, 운영 홈 200, 카드 API 비로그인 401, cleanup cron 무인증 401을 확인했다.
+
+## 공유 카드 flip·아이템 상세 (2026-08-25)
+
+### 성공 기준
+
+- [x] 공유 카드의 앞·뒷면을 클릭·키보드로 전환할 수 있다.
+- [x] 뒷면에서 모든 착장 아이템의 이름과 카테고리를 확인할 수 있다.
+- [x] 아이템 이름을 누르면 공개용 이미지와 상세 정보가 모달로 표시된다.
+- [x] 공유 페이지의 SSR/OG와 private crop 비공개 정책을 유지한다.
+
+### 계획
+
+- [x] 1. 현재 공유 데이터와 재사용 가능한 dialog/UI 패턴을 조사한다.
+- [x] 2. Server Page + Client flip island 구조와 표시명 fallback을 문서화한다.
+- [x] 3. 아이템 표시명·상세정보 presenter 테스트를 RED로 확인한다.
+- [x] 4. 3D flip 카드와 아이템 상세 모달을 구현한다.
+- [x] 5. 접근성·반응형·보안과 전체 빌드를 검증한다.
+- [ ] 6. `main`에 푸시하고 운영 공유 페이지에서 확인한다.
+
+### Review
+
+- 공유 페이지의 SSR/OG를 유지하고 flip·선택 상태만 `ShareFlipCard` Client Component로 격리했다.
+- 앞면 전체와 외부 토글로 카드를 뒤집고, 뒷면 이름 버튼에서 native dialog 상세 모달을 연다. 제품명·설명·색상 카테고리 순으로 이름 fallback을 적용했다.
+- 공개 클라이언트 DTO에는 내부 Storage path, bbox, extraction 상태가 없고 cutout `image_url`만 포함한다. 공개 cutout이 없으면 private crop 대신 안내 placeholder를 표시한다.
+- 숨은 face는 `inert` 처리하고 flip 뒤 보이는 면으로 포커스를 이동한다. reduced-motion 사용자는 전환 애니메이션 없이 이용할 수 있다.
+- RED: `share-item` 모듈 부재로 테스트 컴파일 실패를 확인했다. GREEN: 46 tests PASS, TypeScript PASS, ESLint 0 warnings, Next.js production build PASS.
+- 로컬 공개 레코드로 앞↔뒤 전환, 4개 아이템 이름, 모달 열기·닫기, 빈 이미지 placeholder, 포커스 이동, 내부 경로 비노출을 확인했다.
